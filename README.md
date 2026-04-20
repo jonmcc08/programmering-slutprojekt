@@ -1,1 +1,3 @@
-"Slutprojekt i Javascript, en Tower Defense spel med skol-tema" 
+Slutprojekt i Programmering 1.
+
+Tower defense spel med skolkoncept
