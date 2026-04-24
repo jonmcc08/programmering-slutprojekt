@@ -4,8 +4,12 @@ body {
     overflow: hidden;
 }
 
-#gameCanvas {
+.canvasDeco {
+    position: absolute;
+    top: 0;
+    left: 0;
     aspect-ratio: 1.7/1;
     height: 100vh;
     border: 2px solid black;
 }
+

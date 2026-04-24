@@ -1,8 +1,17 @@
 /** @type {HTMLCanvasElement} */
-const canvas = document.getElementById("gameCanvas")
-
+const bookCanvas = document.getElementById("bookCanvas")
 /** @type {CanvasRenderingContext2D} */
-const ctx = canvas.getContext("2d")
+const Bctx = bookCanvas.getContext("2d")
+
+/** @type {HTMLCanvasElement} */
+const mapCanvas = document.getElementById("mapCanvas")
+/** @type {CanvasRenderingContext2D} */
+const Mctx = mapCanvas.getContext("2d")
+
+/** @type {HTMLCanvasElement} */
+const towerCanvas = document.getElementById("towerCanvas")
+/** @type {CanvasRenderingContext2D} */
+const Tctx = towerCanvas.getContext("2d")
 
 // Testar movement
 class Book {
@@ -10,8 +19,9 @@ class Book {
         this.path = [{x:630, y:0}, {x: 630, y:260}, {x:100, y:260}, {x:100, y:100}, {x:260, y:100}, {x:260, y:450}, {x:770, y:450}, {x:770, y:250}, {x:918, y:250}]
         this.x = this.path[0].x
         this.y = this.path[0].y
-        this.speed = 5
+        this.speed = 1
         this.pathindex = 0
+        this.length = 20
     }
 
     movement() {
@@ -38,40 +48,53 @@ class Book {
             } else if (disY < 0) {
                 this.y -= this.speed
             }
+        }
     }
+
+    draw(ctx) {
+        ctx.beginPath()
+        ctx.fillRect(this.x, this.y, this.length, this.length)
+        ctx.fillStyle = "black"
+        ctx.fill()
+    }
+
+    erase(ctx) {
+        ctx.clearRect(this.x, this.y, this.length, this.length)
     }
 }
 
-let book = new Book()
-// Test
-for(let i = 0; i < 1000; i++) {
-    book.movement()
-    console.log(`{${book.x}: ${book.y}} Index: ${book.pathindex}`)
-}
 
 function animate() {
-    
+
+    book.erase(Bctx)
+    book.movement()
+    book.draw(Bctx)
+
+    requestAnimationFrame(animate)
 }
+
 
 // Pathtracar som template för senare backgrundsbild som ska göras.
 function mapPath() {
-    ctx.beginPath();
-    ctx.moveTo(630, 0);
-    ctx.lineTo(630, 260);
-    ctx.lineTo(100, 260);
-    ctx.lineTo(100, 100);
-    ctx.lineTo(260, 100);
-    ctx.lineTo(260, 450);
-    ctx.lineTo(770, 450);
-    ctx.lineTo(770, 250);
-    ctx.lineTo(918, 250);
-    ctx.strokeStyle = "black";
-    ctx.lineWidth = 3;
+    Mctx.beginPath();
+    Mctx.moveTo(630, 0);
+    Mctx.lineTo(630, 260);
+    Mctx.lineTo(100, 260);
+    Mctx.lineTo(100, 100);
+    Mctx.lineTo(260, 100);
+    Mctx.lineTo(260, 450);
+    Mctx.lineTo(770, 450);
+    Mctx.lineTo(770, 250);
+    Mctx.lineTo(918, 250);
+    Mctx.strokeStyle = "black";
+    Mctx.lineWidth = 3;
 
-    ctx.stroke();
-    
+    Mctx.stroke();
 }
 
-mapPath()
+let book = new Book()
 
+mapPath()
+animate()
+// Test
 
