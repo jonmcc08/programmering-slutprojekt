@@ -15,13 +15,15 @@ const Tctx = towerCanvas.getContext("2d")
 
 // Testar movement
 class Book {
-    constructor() {
+    constructor(health, speed, type) {
         this.path = [{x:630, y:0}, {x: 630, y:260}, {x:100, y:260}, {x:100, y:100}, {x:260, y:100}, {x:260, y:450}, {x:770, y:450}, {x:770, y:250}, {x:918, y:250}]
         this.x = this.path[0].x
         this.y = this.path[0].y
-        this.speed = 1
+        this.speed = speed
         this.pathindex = 0
         this.length = 20
+        this.health = health
+        this.type = type
     }
 
     movement() {
@@ -63,6 +65,34 @@ class Book {
     }
 }
 
+class RoundManager {
+    constructor() {
+        this.currentRoundIndex = 0
+        this.enemies = []
+    }
+
+    async loadRoundList() {
+        const retrieveData = await dataRetreiver("../rounds.json")
+        this.rounds = retrieveData.rounds
+        this.loadRound()
+    }
+
+    loadRound() {
+        const currentRound = this.rounds[this.currentRoundIndex]
+        console.log(currentRound)
+        currentRound.roundEnemies.forEach(wave => {
+            for(let i = 0; i < wave.amount; i++) {
+                const enemy = new Book(wave.health, wave.speed, wave.type)
+            }
+        })
+    }
+}
+
+async function dataRetreiver(url) {
+    const data = await fetch(url)
+    const jsonFile = await data.json()
+    return jsonFile
+}
 
 function animate() {
 
@@ -72,6 +102,7 @@ function animate() {
 
     requestAnimationFrame(animate)
 }
+
 
 
 // Pathtracar som template för senare backgrundsbild som ska göras.
@@ -92,9 +123,9 @@ function mapPath() {
     Mctx.stroke();
 }
 
-let book = new Book()
+let round = new RoundManager()
 
 mapPath()
+round.loadRoundList()
 animate()
 // Test
-

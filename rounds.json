@@ -1,7 +1,70 @@
 {
     "rounds": [
         {
-            
+            "id": 1,
+            "cashReward": 300,
+            "roundEnemies": [
+                {
+                    "type": 1,
+                    "amount": 10,
+                    "betweenDuration": 1,
+                    "health": 1,
+                    "speed": 1
+                }
+            ]
+        },
+        {
+            "id": 2,
+            "cashReward": 400,
+            "roundEnemies": [
+                {
+                    "type": 1,
+                    "amount": 5,
+                    "betweenDuration": 1,
+                    "health": 1,
+                    "speed": 1
+                },
+                {
+                    "type": 2,
+                    "amount": 3,
+                    "betweenDuration": 0.5,
+                    "health": 2,
+                    "speed": 2
+                }
+            ]
+        },
+        {
+            "id": 3,
+            "cashReward": 500,
+            "roundEnemies": [
+                {
+                    "type": 2,
+                    "amount": 20,
+                    "betweenDuration": 1,
+                    "health": 2,
+                    "speed": 2
+                }
+            ]
+        },
+        {
+            "id": 4,
+            "cashReward": 600,
+            "roundEnemies": [
+                {
+                    "type": 3,
+                    "amount": 5,
+                    "betweenDuration": 1,
+                    "health": 3,
+                    "speed": 3
+                },
+                {
+                    "type": 2,
+                    "amount": 10,
+                    "betweenDuration": 0.5,
+                    "health": 2,
+                    "speed": 2
+                }
+            ]
         }
     ]
 }
