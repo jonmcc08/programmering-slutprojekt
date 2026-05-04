@@ -13,6 +13,18 @@ const towerCanvas = document.getElementById("towerCanvas")
 /** @type {CanvasRenderingContext2D} */
 const Tctx = towerCanvas.getContext("2d")
 
+// SPRITES
+const sprites = {
+    book1: new Image(),
+    book2: new Image(),
+    book3: new Image()
+}
+
+sprites.book1.src = "sprites/book1.jpg"
+sprites.book2.src = "sprites/book2.jpg"
+sprites.book3.src = "sprites/book3.jpg"
+
+
 // Testar movement
 class Book {
     constructor(health, speed, type) {
@@ -33,9 +45,6 @@ class Book {
         const disX = nextPosition.x - this.x
         const disY = nextPosition.y - this.y
         
-        console.log(disX)
-        console.log(disY)
-        console.log(this.path[this.pathindex])
 
         if (Math.abs(disX) < this.speed && Math.abs(disY) < this.speed) {
             this.pathindex++
@@ -54,14 +63,10 @@ class Book {
     }
 
     draw(ctx) {
+        const bookSprite = sprites["book" + this.type]
         ctx.beginPath()
-        ctx.fillRect(this.x, this.y, this.length, this.length)
-        ctx.fillStyle = "black"
+        ctx.drawImage(bookSprite, this.x, this.y)
         ctx.fill()
-    }
-
-    erase(ctx) {
-        ctx.clearRect(this.x, this.y, this.length, this.length)
     }
 }
 
@@ -69,22 +74,59 @@ class RoundManager {
     constructor() {
         this.currentRoundIndex = 0
         this.enemies = []
+        this.activeRound = false
+        this.allEnemiesSpawned = false
     }
 
     async loadRoundList() {
         const retrieveData = await dataRetreiver("../rounds.json")
         this.rounds = retrieveData.rounds
         this.loadRound()
+        animate()
     }
 
     loadRound() {
-        const currentRound = this.rounds[this.currentRoundIndex]
-        console.log(currentRound)
-        currentRound.roundEnemies.forEach(wave => {
-            for(let i = 0; i < wave.amount; i++) {
-                const enemy = new Book(wave.health, wave.speed, wave.type)
+        const currentRound = this.rounds[this.currentRoundIndex];
+        this.enemies = []; 
+        let roundEnemies = 0
+        let amountEnemies = 0
+        this.activeRound = true
+
+        currentRound.roundEnemies.forEach(wave => roundEnemies += wave.amount)
+
+        currentRound.roundEnemies.forEach((wave, index) => {
+            const waveDelay = index * 2000; 
+            console.log(wave)
+            for (let i = 0; i < wave.amount; i++) {
+                setTimeout(() => {
+                    const enemy = new Book(wave.health, wave.speed, wave.type)
+                    this.enemies.push(enemy)
+                    amountEnemies++
+                    console.log(enemy)
+                    if(amountEnemies == roundEnemies) {
+                        this.allEnemiesSpawned = true
+                    }
+                }, waveDelay + (i * wave.betweenDuration * 1000))
             }
         })
+    }
+
+    currentRound(ctx) {
+        if(this.activeRound && this.allEnemiesSpawned && this.enemies.length == 0) {
+            this.currentRoundIndex++
+            this.allEnemiesSpawned = false
+            this.activeRound = false
+            setTimeout(() => this.loadRound(), 5000)
+            return
+        }
+        for (let i = this.enemies.length - 1; i >= 0; i--) {
+            const enemy = this.enemies[i];
+            enemy.movement();
+            enemy.draw(ctx);
+            if (enemy.pathindex >= enemy.path.length) {
+                this.enemies.splice(i, 1);
+            }
+        }
     }
 }
 
@@ -95,11 +137,8 @@ async function dataRetreiver(url) {
 }
 
 function animate() {
-
-    book.erase(Bctx)
-    book.movement()
-    book.draw(Bctx)
-
+    Bctx.clearRect(0, 0, bookCanvas.width, bookCanvas.height)
+    round.currentRound(Bctx)
     requestAnimationFrame(animate)
 }
 
@@ -127,5 +166,4 @@ let round = new RoundManager()
 
 mapPath()
 round.loadRoundList()
-animate()
 // Test
