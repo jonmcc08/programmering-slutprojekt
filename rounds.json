@@ -65,6 +65,15 @@
                     "speed": 2
                 }
             ]
+        },
+        {
+            "id": 5,
+            "cashReward": 600,
+            "roundEnemies": [
+                {
+                    
+                }
+            ]
         }
     ]
 }

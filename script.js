@@ -13,13 +13,23 @@ const towerCanvas = document.getElementById("towerCanvas")
 /** @type {CanvasRenderingContext2D} */
 const Tctx = towerCanvas.getContext("2d")
 
+/** @type {HTMLCanvasElement} */
+const uiCanvas = document.getElementById("uiCanvas")
+/** @type {CanvasRenderingContext2D} */
+const uictx = uiCanvas.getContext("2d")
+
+let currentMoney = 0
+let currentHp = 100
+
 // SPRITES
 const sprites = {
+    heart: new Image(),
     book1: new Image(),
     book2: new Image(),
     book3: new Image()
 }
 
+sprites.heart.src = "sprites/heart.png"
 sprites.book1.src = "sprites/book1.jpg"
 sprites.book2.src = "sprites/book2.jpg"
 sprites.book3.src = "sprites/book3.jpg"
@@ -91,10 +101,13 @@ class RoundManager {
         let roundEnemies = 0
         let amountEnemies = 0
         this.activeRound = true
+        currentMoney += currentRound.cashReward
+        uiUpdate()
 
         currentRound.roundEnemies.forEach(wave => roundEnemies += wave.amount)
 
         currentRound.roundEnemies.forEach((wave, index) => {
+            console.log(index)
             const waveDelay = index * 2000; 
             console.log(wave)
             for (let i = 0; i < wave.amount; i++) {
@@ -124,10 +137,23 @@ class RoundManager {
             enemy.movement();
             enemy.draw(ctx);
             if (enemy.pathindex >= enemy.path.length) {
+                currentHp -= enemy.health
                 this.enemies.splice(i, 1);
+                uiUpdate()
             }
         }
     }
+}
+
+class Tower {
+    constructor(towerType) {
+        this.towerType = towerType
+        this.tier = 0
+        this.x = null
+        this.y = null
+    }
+
+    
 }
 
 async function dataRetreiver(url) {
@@ -140,6 +166,16 @@ function animate() {
     Bctx.clearRect(0, 0, bookCanvas.width, bookCanvas.height)
     round.currentRound(Bctx)
     requestAnimationFrame(animate)
+}
+
+function uiUpdate() {
+    const heartSprite = sprites["heart"]
+    console.log("Updating UI")
+    uictx.clearRect(0, 0, uiCanvas.width, uiCanvas.height)
+    uictx.font = "48px serif"
+    uictx.drawImage(heartSprite, 10, 20)
+    uictx.fillText(currentHp, 40, 50)
+    uictx.fillText(currentMoney, 160, 50)
 }
 
 
@@ -164,6 +200,17 @@ function mapPath() {
 
 let round = new RoundManager()
 
-mapPath()
-round.loadRoundList()
-// Test
+let spritesLeft = 4
+
+// Loading
+for (let sprite in sprites) {
+    sprites[sprite].onload = () => {
+        console.log("Sprite loaded: " + sprite)
+        spritesLeft--
+        if (spritesLeft === 0) {
+            mapPath()
+            uiUpdate()
+            round.loadRoundList()
+        }
+    }
+}

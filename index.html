@@ -7,10 +7,29 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <canvas class="canvasDeco" id="mapCanvas" height="540" width="918"></canvas>
-    <canvas class="canvasDeco" id="bookCanvas" height="540" width="918"></canvas>
-    <canvas class="canvasDeco" id="towerCanvas" height="540" width="918"></canvas>
+    <div class="gameContainer">    
+        <div class="canvasContainer">
+            <canvas class="canvasDeco" id="mapCanvas" height="540" width="918"></canvas>
+            <canvas class="canvasDeco" id="bookCanvas" height="540" width="918"></canvas>
+            <canvas class="canvasDeco" id="towerCanvas" height="540" width="918"></canvas>
+            <canvas class="canvasDeco" id="uiCanvas" height="540" width="918"></canvas>
+        </div>
+        <div id="sideTab">
+            <div id="towersTab">
+                <div id="top">
+                    <h2>Towers</h2>
+                </div>
+                <div class="towers">
+                    <div class="tower" id="1">
+                        <img src="sprites/tower1.png">
+                    </div>
+                </div>
+            </div>
+            <div id="buttons">
 
+            </div>
+        </div>
+    </div>
     <script src="script.js"></script>
 </body>
 </html>
