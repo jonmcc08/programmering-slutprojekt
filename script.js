@@ -2,6 +2,7 @@
 const bookCanvas = document.getElementById("bookCanvas")
 /** @type {CanvasRenderingContext2D} */
 const Bctx = bookCanvas.getContext("2d")
+Bctx.imageSmoothingEnabled = false 
 
 /** @type {HTMLCanvasElement} */
 const mapCanvas = document.getElementById("mapCanvas")
@@ -12,28 +13,55 @@ const Mctx = mapCanvas.getContext("2d")
 const towerCanvas = document.getElementById("towerCanvas")
 /** @type {CanvasRenderingContext2D} */
 const Tctx = towerCanvas.getContext("2d")
+Tctx.imageSmoothingEnabled = false 
+
+/** @type {HTMLCanvasElement} */
+const towerPlaceCanvas = document.getElementById("towerPlaceCanvas")
+/** @type {CanvasRenderingContext2D} */
+const Tpctx = towerCanvas.getContext("2d")
+Tpctx.imageSmoothingEnabled = false 
 
 /** @type {HTMLCanvasElement} */
 const uiCanvas = document.getElementById("uiCanvas")
 /** @type {CanvasRenderingContext2D} */
 const uictx = uiCanvas.getContext("2d")
+uictx.imageSmoothingEnabled = false 
 
+
+const windowUi = document.getElementById("gameContainer")
+
+const towers = document.querySelectorAll(".tower")
+
+let aspectRatio = window.innerHeight / 540
+let towerCurrentId = 0
+let mouseDown = false
 let currentMoney = 0
 let currentHp = 100
+let pause = true
+let insideCanvas = false
+let placedTowers = []
+let towerIdIndex = 1
 
 // SPRITES
 const sprites = {
     heart: new Image(),
     book1: new Image(),
     book2: new Image(),
-    book3: new Image()
+    book3: new Image(),
+    tower1: new Image(),
+    tower10: new Image()
 }
 
 sprites.heart.src = "sprites/heart.png"
 sprites.book1.src = "sprites/book1.jpg"
 sprites.book2.src = "sprites/book2.jpg"
 sprites.book3.src = "sprites/book3.jpg"
+sprites.tower1.src = "sprites/tower1.png"
+sprites.tower10.src = "sprites/tower10.png" 
 
+for (let sprite in sprites) {
+    sprites[sprite].style.imageRendering = "pixelated"
+}
 
 // Testar movement
 class Book {
@@ -146,14 +174,14 @@ class RoundManager {
 }
 
 class Tower {
-    constructor(towerType) {
+    constructor(towerType, towerId, ctx, x, y) {
         this.towerType = towerType
+        this.towerId = towerId
         this.tier = 0
-        this.x = null
-        this.y = null
-    }
 
-    
+        const towerImage = sprites[("tower" + towerCurrentId)]
+        ctx.drawImage(towerImage, x, y, 30, 30)
+    }
 }
 
 async function dataRetreiver(url) {
@@ -178,8 +206,6 @@ function uiUpdate() {
     uictx.fillText(currentMoney, 160, 50)
 }
 
-
-
 // Pathtracar som template för senare backgrundsbild som ska göras.
 function mapPath() {
     Mctx.beginPath();
@@ -197,6 +223,49 @@ function mapPath() {
 
     Mctx.stroke();
 }
+
+towers.forEach(button => {
+    button.addEventListener("mousedown", function(e) {
+        mouseDown = true
+        towerCurrentId = button.id
+    })
+})
+
+window.addEventListener("mouseup", function(e) {
+    if (insideCanvas && mouseDown) {
+        Tpctx.clearRect(0, 0, towerPlaceCanvas.width, towerPlaceCanvas.height)
+        const tower = new Tower(towerCurrentId, towerIdIndex, Tctx, (e.x / aspectRatio), (e.y / aspectRatio))
+    }
+    mouseDown = false
+    windowUi.style.cursor = "default"
+})
+
+window.addEventListener("mousemove", function(e) {
+    if(mouseDown) {
+        const towerImage = sprites[("tower" + towerCurrentId)]
+        windowUi.style.cursor = "drag"
+        console.log(aspectRatio * 918)
+        if(e.x < aspectRatio * 918) {
+            insideCanvas = true
+            Tpctx.clearRect(0, 0, towerPlaceCanvas.width, towerPlaceCanvas.height)
+            Tpctx.drawImage(towerImage, (e.x / aspectRatio), (e.y / aspectRatio), 30, 30)
+        } else {
+            insideCanvas = false
+        }
+    }
+})
+
+window.addEventListener("keydown", function (e) {
+    const key = e.key
+    if(key === " ") {
+        pause = !pause
+        animate()
+    }
+})
+
+window.addEventListener("resize", function(e) {
+    aspectRatio = window.innerHeight / 540
+})
 
 let round = new RoundManager()
 
