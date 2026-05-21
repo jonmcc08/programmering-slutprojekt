@@ -44,6 +44,8 @@ let placedTowers = []
 let towerIdIndex = 1
 let towers = null
 let currentTowerCost = 0
+let lastTime = performance.now()
+let fps = 0
 
 // SPRITES
 const sprites = {
@@ -75,26 +77,27 @@ class Book {
         this.type = type
     }
 
-    movement() {
+    movement(deltaTime) {
 
         const nextPosition = this.path[this.pathindex]
 
         const disX = nextPosition.x - this.x
         const disY = nextPosition.y - this.y
-        
+
+        const movementLenght = 60 * this.speed * deltaTime
 
         if (Math.abs(disX) < this.speed && Math.abs(disY) < this.speed) {
             this.pathindex++
         } else {
             if (disX > 0) {
-                this.x += this.speed
+                this.x += movementLenght
             } else if (disX < 0) {
-                this.x -= this.speed
+                this.x -= movementLenght
             }
             if (disY > 0) {
-                this.y += this.speed;
+                this.y += movementLenght
             } else if (disY < 0) {
-                this.y -= this.speed
+                this.y -= movementLenght
             }
         }
     }
@@ -118,7 +121,7 @@ class RoundManager {
     }
 
     async loadRoundList() {
-        const retrieveData = await dataRetreiver("../rounds.json")
+        const retrieveData = await dataRetreiver("rounds.json")
         this.rounds = retrieveData.rounds
         this.loadRound()
         animate()
@@ -148,12 +151,12 @@ class RoundManager {
                     if(amountEnemies == roundEnemies) {
                         this.allEnemiesSpawned = true
                     }
-                }, waveDelay + (i * wave.betweenDuration * 1000))
+                }, waveDelay + (i * wave.betweenDuration * 1000)) // MÅSTE GÖRA OM HELA DETTA TILL DELTA TID, ANNARS GÅR HELA SPELET SÖNDER
             }
         })
     }
 
-    currentRound(ctx) {
+    currentRound(ctx, deltaTime) {
         if(this.activeRound && this.allEnemiesSpawned && this.enemies.length == 0) {
             this.currentRoundIndex++
             this.allEnemiesSpawned = false
@@ -166,7 +169,7 @@ class RoundManager {
         });
         for (let i = this.enemies.length - 1; i >= 0; i--) {
             const enemy = this.enemies[i];
-            enemy.movement();
+            enemy.movement(deltaTime);
             enemy.draw(ctx);
             if (enemy.pathindex >= enemy.path.length) {
                 currentHp -= enemy.health
@@ -233,9 +236,14 @@ async function loadTowers() {
     towers = retrieveData.towers
 }
 
-function animate() {
+function animate(currentTime = performance.now()) {
+    let deltaTime = (currentTime - lastTime) / 1000 // Tiden det tar för saken att "repeata" i sekunder
+
+    lastTime = currentTime
+
+    fps = Math.round(1 / deltaTime)
     Bctx.clearRect(0, 0, bookCanvas.width, bookCanvas.height)
-    round.currentRound(Bctx)
+    round.currentRound(Bctx, deltaTime)
     requestAnimationFrame(animate)
 }
 
@@ -269,7 +277,7 @@ function mapPath(ctx, colour, width) {
 
 function onMap(x, y) {
     console.log(`(${x}, ${y})`)
-    return ((x > 590 && x < 640 && y > 0 && y < 280) || (x > 60 && x < 640 && y > 220 && y < 270) || (x > 60 && x < 110 && y > 60 && y < 270) || (x > 60 && x < 270 && y > 60 && y < 110) || (x > 210 && x < 270 && y > 60 && y < 460) || (x > 210 && x < 780 && y > 410 && y < 460) || (x > 730 && x < 780 && y > 210 && y < 460) || (x > 730 && x < 918 && y > 210 && y < 260) || (x < 0) || (x > 888) || (y < 0) || (y > 510))
+    return ((x > 590 && x < 640 && y > 0 && y < 270) || (x > 60 && x < 640 && y > 220 && y < 270) || (x > 60 && x < 110 && y > 60 && y < 270) || (x > 60 && x < 270 && y > 60 && y < 110) || (x > 210 && x < 270 && y > 60 && y < 460) || (x > 210 && x < 780 && y > 410 && y < 460) || (x > 730 && x < 780 && y > 210 && y < 460) || (x > 730 && x < 918 && y > 210 && y < 260) || (x < 0) || (x > 888) || (y < 0) || (y > 510))
 }
 
 
@@ -353,6 +361,7 @@ window.addEventListener("resize", function(e) {
     aspectRatio = window.innerHeight / 540
 })
 
+
 let round = new RoundManager()
 loadTowers()
 
@@ -367,6 +376,7 @@ for (let sprite in sprites) {
             mapPath(Mctx, "black", 3)
             uiUpdate()
             round.loadRoundList()
+            fpsTracker()
         }
     }
 }
