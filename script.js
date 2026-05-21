@@ -8,6 +8,8 @@ Bctx.imageSmoothingEnabled = false
 const mapCanvas = document.getElementById("mapCanvas")
 /** @type {CanvasRenderingContext2D} */
 const Mctx = mapCanvas.getContext("2d")
+Mctx.imageSmoothingEnabled = false 
+
 
 /** @type {HTMLCanvasElement} */
 const towerCanvas = document.getElementById("towerCanvas")
@@ -18,7 +20,7 @@ Tctx.imageSmoothingEnabled = false
 /** @type {HTMLCanvasElement} */
 const towerPlaceCanvas = document.getElementById("towerPlaceCanvas")
 /** @type {CanvasRenderingContext2D} */
-const Tpctx = towerCanvas.getContext("2d")
+const Tpctx = towerPlaceCanvas.getContext("2d")
 Tpctx.imageSmoothingEnabled = false 
 
 /** @type {HTMLCanvasElement} */
@@ -27,20 +29,21 @@ const uiCanvas = document.getElementById("uiCanvas")
 const uictx = uiCanvas.getContext("2d")
 uictx.imageSmoothingEnabled = false 
 
-
 const windowUi = document.getElementById("gameContainer")
-
-const towers = document.querySelectorAll(".tower")
+const upgradeTab = document.getElementById("upgradeTab")
+const towersList = document.querySelectorAll(".tower")
 
 let aspectRatio = window.innerHeight / 540
 let towerCurrentId = 0
 let mouseDown = false
-let currentMoney = 0
+let currentMoney = 500
 let currentHp = 100
 let pause = true
 let insideCanvas = false
 let placedTowers = []
 let towerIdIndex = 1
+let towers = null
+let currentTowerCost = 0
 
 // SPRITES
 const sprites = {
@@ -58,10 +61,6 @@ sprites.book2.src = "sprites/book2.jpg"
 sprites.book3.src = "sprites/book3.jpg"
 sprites.tower1.src = "sprites/tower1.png"
 sprites.tower10.src = "sprites/tower10.png" 
-
-for (let sprite in sprites) {
-    sprites[sprite].style.imageRendering = "pixelated"
-}
 
 // Testar movement
 class Book {
@@ -100,11 +99,13 @@ class Book {
         }
     }
 
+    currentPosition() {
+        return ([this.x, this.y])
+    }
+
     draw(ctx) {
         const bookSprite = sprites["book" + this.type]
-        ctx.beginPath()
         ctx.drawImage(bookSprite, this.x, this.y)
-        ctx.fill()
     }
 }
 
@@ -160,6 +161,9 @@ class RoundManager {
             setTimeout(() => this.loadRound(), 5000)
             return
         }
+        placedTowers.forEach(tower => {
+            tower.calcEnemyDistance(this.enemies)
+        });
         for (let i = this.enemies.length - 1; i >= 0; i--) {
             const enemy = this.enemies[i];
             enemy.movement();
@@ -170,17 +174,51 @@ class RoundManager {
                 uiUpdate()
             }
         }
+        for (let i = 0; i < placedTowers.length; i++) {
+            const tower = placedTowers[i]
+            tower.draw(Tctx)
+        }
     }
 }
 
 class Tower {
-    constructor(towerType, towerId, ctx, x, y) {
+    constructor(towerType, towerId, x, y) {
         this.towerType = towerType
+        this.towerName = towers[(towerId - 1)].name
+        this.range = towers[(towerId - 1)].range
+        this.attackSpeed = towers[(towerId - 1)].attackSpeed
         this.towerId = towerId
+        this.image = sprites[("tower" + towerType)]
         this.tier = 0
+        this.shots = 0
+        this.x = x
+        this.y = y
+    }
 
-        const towerImage = sprites[("tower" + towerCurrentId)]
-        ctx.drawImage(towerImage, x, y, 30, 30)
+    draw(ctx) {
+        ctx.drawImage(this.image, this.x, this.y, 32, 32)
+    }
+
+    calcEnemyDistance(enemies) {
+        enemies.forEach(enemy => {
+            const currentEnemyPosition = enemy.currentPosition()
+            const deltaX = currentEnemyPosition[0] - this.x + 16
+            const deltaY = currentEnemyPosition[1] - this.y + 16
+
+            const distance = (deltaX ** 2 + deltaY ** 2)**0.5
+
+            if (distance <= this.range) {
+                console.log("Enemy in reach: " + enemy.type)
+            }
+        });
+    }
+
+    upgrade() {
+        console.log("Upgrade tab open: " + this.towerName)
+        upgradeTab.querySelector(".image").innerHTML = `
+        <img src="sprites/tower${this.towerType}.png" style="transform: rotate(180deg)">
+        `
+        upgradeTab.classList.add("showUpgrade")
     }
 }
 
@@ -188,6 +226,11 @@ async function dataRetreiver(url) {
     const data = await fetch(url)
     const jsonFile = await data.json()
     return jsonFile
+}
+
+async function loadTowers() {
+    const retrieveData = await dataRetreiver("towers.json")
+    towers = retrieveData.towers
 }
 
 function animate() {
@@ -207,49 +250,92 @@ function uiUpdate() {
 }
 
 // Pathtracar som template för senare backgrundsbild som ska göras.
-function mapPath() {
-    Mctx.beginPath();
-    Mctx.moveTo(630, 0);
-    Mctx.lineTo(630, 260);
-    Mctx.lineTo(100, 260);
-    Mctx.lineTo(100, 100);
-    Mctx.lineTo(260, 100);
-    Mctx.lineTo(260, 450);
-    Mctx.lineTo(770, 450);
-    Mctx.lineTo(770, 250);
-    Mctx.lineTo(918, 250);
-    Mctx.strokeStyle = "black";
-    Mctx.lineWidth = 3;
+function mapPath(ctx, colour, width) {
+    ctx.beginPath();
+    ctx.moveTo(630, 0);
+    ctx.lineTo(630, 260);
+    ctx.lineTo(100, 260);
+    ctx.lineTo(100, 100);
+    ctx.lineTo(260, 100);
+    ctx.lineTo(260, 450);
+    ctx.lineTo(770, 450);
+    ctx.lineTo(770, 250);
+    ctx.lineTo(918, 250);
+    ctx.strokeStyle = colour;
+    ctx.lineWidth = width;
 
-    Mctx.stroke();
+    ctx.stroke();
 }
 
-towers.forEach(button => {
+function onMap(x, y) {
+    console.log(`(${x}, ${y})`)
+    return ((x > 590 && x < 640 && y > 0 && y < 280) || (x > 60 && x < 640 && y > 220 && y < 270) || (x > 60 && x < 110 && y > 60 && y < 270) || (x > 60 && x < 270 && y > 60 && y < 110) || (x > 210 && x < 270 && y > 60 && y < 460) || (x > 210 && x < 780 && y > 410 && y < 460) || (x > 730 && x < 780 && y > 210 && y < 460) || (x > 730 && x < 918 && y > 210 && y < 260) || (x < 0) || (x > 888) || (y < 0) || (y > 510))
+}
+
+
+
+towersList.forEach(button => {
     button.addEventListener("mousedown", function(e) {
         mouseDown = true
         towerCurrentId = button.id
+        currentTowerCost = towers[(towerCurrentId - 1)].cost
+        console.log(currentTowerCost)
+    })
+})
+
+window.addEventListener("mousedown", function (e) {
+    placedTowers.forEach(tower => {
+        const x = tower.x
+        const y = tower.y
+
+        const mouseX = e.x / aspectRatio
+        const mouseY = e.y / aspectRatio
+
+        if(!upgradeTab.contains(e.target)) {
+            upgradeTab.classList.remove("showUpgrade")
+        }
+        if(x <= mouseX && mouseX <= x + 32 && y <= mouseY && mouseY <= y + 32) {
+            tower.upgrade()
+        }
     })
 })
 
 window.addEventListener("mouseup", function(e) {
-    if (insideCanvas && mouseDown) {
-        Tpctx.clearRect(0, 0, towerPlaceCanvas.width, towerPlaceCanvas.height)
-        const tower = new Tower(towerCurrentId, towerIdIndex, Tctx, (e.x / aspectRatio), (e.y / aspectRatio))
+    Tpctx.clearRect(0, 0, towerPlaceCanvas.width, towerPlaceCanvas.height)
+    if (insideCanvas && mouseDown && (currentTowerCost <= currentMoney) && !onMap((e.x / aspectRatio), (e.y / aspectRatio))) {
+        currentMoney -= currentTowerCost
+        uiUpdate()
+        const tower = new Tower(towerCurrentId, towerIdIndex, (e.x / aspectRatio), (e.y / aspectRatio))
+        placedTowers.push(tower)
     }
     mouseDown = false
     windowUi.style.cursor = "default"
 })
 
 window.addEventListener("mousemove", function(e) {
+    const x = e.x / aspectRatio
+    const y = e.y / aspectRatio
     if(mouseDown) {
         const towerImage = sprites[("tower" + towerCurrentId)]
         windowUi.style.cursor = "drag"
-        console.log(aspectRatio * 918)
         if(e.x < aspectRatio * 918) {
             insideCanvas = true
             Tpctx.clearRect(0, 0, towerPlaceCanvas.width, towerPlaceCanvas.height)
-            Tpctx.drawImage(towerImage, (e.x / aspectRatio), (e.y / aspectRatio), 30, 30)
+            Tpctx.beginPath()
+            Tpctx.arc((x + 16), (y + 16), towers[towerCurrentId - 1].range, 0, 2 * Math.PI)
+            Tpctx.strokeStyle = "rgba(38, 255, 0, 0.55)"
+            Tpctx.fillStyle = "rgba(38, 255, 0, 0.55)"
+            Tpctx.fill()
+            Tpctx.stroke()
+            Tpctx.drawImage(towerImage, x, y, 32, 32)
+            if((currentTowerCost >= currentMoney) || onMap(x, y)) {
+                Tpctx.fillStyle = "rgba(255, 0, 0, 0.4)"
+                Tpctx.fillRect(x, y, 32, 32)
+            }
+            mapPath(Tpctx, "rgba(255, 0, 0, 0.4)", 20)
+            console.log(onMap(x, y))
         } else {
+            Tpctx.clearRect(0, 0, towerPlaceCanvas.width, towerPlaceCanvas.height)
             insideCanvas = false
         }
     }
@@ -268,6 +354,7 @@ window.addEventListener("resize", function(e) {
 })
 
 let round = new RoundManager()
+loadTowers()
 
 let spritesLeft = 4
 
@@ -277,7 +364,7 @@ for (let sprite in sprites) {
         console.log("Sprite loaded: " + sprite)
         spritesLeft--
         if (spritesLeft === 0) {
-            mapPath()
+            mapPath(Mctx, "black", 3)
             uiUpdate()
             round.loadRoundList()
         }

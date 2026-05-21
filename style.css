@@ -74,6 +74,24 @@ body {
 }
 
 
-.tower img {
+img {
+    image-rendering: pixelated;
     width: 40%;
+}
+
+#upgradeTab {
+    position: absolute;
+    top: 5vh;
+    right: 0;
+    background-color: rgb(117, 64, 0);
+    height: 90vh;
+    transition: width 0.3s ease-in;
+}
+
+.hideUpgrade {
+    width: 0%;
+}
+
+.showUpgrade {
+    width: 30%;
 }
