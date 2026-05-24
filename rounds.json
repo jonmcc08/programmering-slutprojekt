@@ -28,7 +28,7 @@
                     "type": 2,
                     "amount": 3,
                     "betweenDuration": 0.5,
-                    "health": 2,
+                    "health": 1,
                     "speed": 2
                 }
             ]
@@ -41,7 +41,7 @@
                     "type": 2,
                     "amount": 20,
                     "betweenDuration": 1,
-                    "health": 2,
+                    "health": 1,
                     "speed": 2
                 }
             ]
@@ -54,14 +54,14 @@
                     "type": 3,
                     "amount": 5,
                     "betweenDuration": 1,
-                    "health": 3,
+                    "health": 1,
                     "speed": 3
                 },
                 {
                     "type": 2,
                     "amount": 10,
                     "betweenDuration": 0.5,
-                    "health": 2,
+                    "health": 1,
                     "speed": 2
                 }
             ]

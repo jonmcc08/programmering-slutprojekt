@@ -10,7 +10,6 @@ const mapCanvas = document.getElementById("mapCanvas")
 const Mctx = mapCanvas.getContext("2d")
 Mctx.imageSmoothingEnabled = false 
 
-
 /** @type {HTMLCanvasElement} */
 const towerCanvas = document.getElementById("towerCanvas")
 /** @type {CanvasRenderingContext2D} */
@@ -22,6 +21,12 @@ const towerPlaceCanvas = document.getElementById("towerPlaceCanvas")
 /** @type {CanvasRenderingContext2D} */
 const Tpctx = towerPlaceCanvas.getContext("2d")
 Tpctx.imageSmoothingEnabled = false 
+
+/** @type {HTMLCanvasElement} */
+const projectileCanvas = document.getElementById("projectileCanvas")
+/** @type {CanvasRenderingContext2D} */
+const Pctx = projectileCanvas.getContext("2d")
+Pctx.imageSmoothingEnabled = false 
 
 /** @type {HTMLCanvasElement} */
 const uiCanvas = document.getElementById("uiCanvas")
@@ -38,7 +43,7 @@ let towerCurrentId = 0
 let mouseDown = false
 let currentMoney = 0
 let currentHp = 100
-let pause = true
+let pause = false
 let insideCanvas = false
 let placedTowers = []
 let towerIdIndex = 1
@@ -54,7 +59,8 @@ const sprites = {
     book2: new Image(),
     book3: new Image(),
     tower1: new Image(),
-    tower10: new Image()
+    tower10: new Image(),
+    pencil: new Image()
 }
 
 sprites.heart.src = "sprites/heart.png"
@@ -62,7 +68,8 @@ sprites.book1.src = "sprites/book1.jpg"
 sprites.book2.src = "sprites/book2.jpg"
 sprites.book3.src = "sprites/book3.jpg"
 sprites.tower1.src = "sprites/tower1.png"
-sprites.tower10.src = "sprites/tower10.png" 
+sprites.tower10.src = "sprites/tower10.png"
+sprites.pencil.src = "sprites/pencil.jpg"
 
 // Testar movement
 class Book {
@@ -106,7 +113,28 @@ class Book {
         return ([this.x, this.y])
     }
 
+    damage(attackDamage) {
+        this.health -= attackDamage
+        currentMoney += 10
+        uiUpdate()
+        if(this.health <= 0) {
+            this.type -= 1
+            if (this.type <= 0) {
+                this.health = 1
+                return true
+            }
+            if (this.health < 0) {
+                const damageOver = Math.abs(this.health)
+                this.health = 1
+                return this.damage(damageOver)
+            }
+        }
+    }
+
     draw(ctx) {
+        if(this.type <= 0) {
+            return
+        }
         const bookSprite = sprites["book" + this.type]
         ctx.drawImage(bookSprite, this.x, this.y)
     }
@@ -153,38 +181,42 @@ class RoundManager {
     }
 
     currentRound(ctx, deltaTime) {
-
-        this.roundTime += deltaTime
-
-        placedTowers.forEach(tower => {
+        if(!pause) {
+            
+            this.roundTime += deltaTime
+            placedTowers.forEach(tower => {
             tower.calcEnemyDistance(this.enemies, deltaTime)
-        });
-        for(let i = this.enemiesLoadingQueue.length - 1; i >= 0; i--) {
-            const enemyDetails = this.enemiesLoadingQueue[i]
-            const enemySpawnDelay = enemyDetails.spawnDelay
-            if(enemySpawnDelay <= this.roundTime) {
-                const enemy = new Book(enemyDetails.health, enemyDetails.speed, enemyDetails.type)
-                this.enemiesLoadingQueue.splice(i, 1)
-                this.enemies.push(enemy)
+            })
+
+            for(let i = this.enemiesLoadingQueue.length - 1; i >= 0; i--) {
+                const enemyDetails = this.enemiesLoadingQueue[i]
+                const enemySpawnDelay = enemyDetails.spawnDelay
+                if(enemySpawnDelay <= this.roundTime) {
+                    const enemy = new Book(enemyDetails.health, enemyDetails.speed, enemyDetails.type)
+                    this.enemiesLoadingQueue.splice(i, 1)
+                    this.enemies.push(enemy)
+                }
+            }
+            if(this.enemiesLoadingQueue.length === 0) {
+                this.allEnemiesSpawned = true
+            }
+            for (let i = this.enemies.length - 1; i >= 0; i--) {
+                const enemy = this.enemies[i];
+                enemy.movement(deltaTime);
+                if (enemy.pathindex >= enemy.path.length) {
+                    currentHp -= enemy.health
+                    this.enemies.splice(i, 1);
+                    uiUpdate()
+                }
             }
         }
-        if(this.enemiesLoadingQueue.length === 0) {
-            this.allEnemiesSpawned = true
-        }
-        for (let i = this.enemies.length - 1; i >= 0; i--) {
-            const enemy = this.enemies[i];
-            enemy.movement(deltaTime);
+
+        this.enemies.forEach(enemy => {
             enemy.draw(ctx);
-            if (enemy.pathindex >= enemy.path.length) {
-                currentHp -= enemy.health
-                this.enemies.splice(i, 1);
-                uiUpdate()
-            }
-        }
-        for (let i = 0; i < placedTowers.length; i++) {
-            const tower = placedTowers[i]
+        })
+        placedTowers.forEach(tower => {
             tower.draw(Tctx)
-        }
+        })
 
         if(this.activeRound && this.allEnemiesSpawned && this.enemies.length == 0) {
             this.currentRoundIndex++
@@ -200,14 +232,16 @@ class Tower {
     constructor(towerType, towerId, x, y) {
         this.towerType = towerType
 
-        const configIndex = towerId - 1
+        const configIndex = towerType - 1
         
         this.towerName = towers[configIndex].name
         this.range = towers[configIndex].range
         this.attackSpeed = towers[configIndex].attackSpeed
+        this.attackDamage = towers[configIndex].attackDamage
         this.attackTime = 0
         this.rotation = 0
         this.towerId = towerId
+        this.towerSlc = false
         this.image = sprites[("tower" + towerType)]
         this.tier = 0
         this.shots = 0
@@ -216,31 +250,60 @@ class Tower {
     }
 
     draw(ctx) {
-        console.log(this.rotation)
         ctx.save()
+        ctx.translate(this.x + 16, this.y + 16)
         ctx.rotate(this.rotation)
-        ctx.drawImage(this.image, this.x, this.y, 32, 32, )
+        ctx.drawImage(this.image, -16, -16, 32, 32)
         ctx.restore()
+        if (this.towerSlc) {
+            ctx.beginPath()
+            ctx.arc((this.x + 16), (this.y + 16), this.range, 0, 2 * Math.PI)
+            ctx.strokeStyle = "rgba(38, 255, 0, 0.55)"
+            ctx.fillStyle = "rgba(38, 255, 0, 0.55)"
+            ctx.fill()
+            ctx.stroke()
+        }
     }
 
     calcEnemyDistance(enemies, deltaTime) {
         this.attackTime -= deltaTime
-        enemies.forEach(enemy => {
+
+        let furthestEnemy = 0
+        let furthestEnemyIndex = -1
+
+        for (let i = 0; i < enemies.length; i++) {
+            const enemy = enemies[i]
             const currentEnemyPosition = enemy.currentPosition()
-            const deltaX = currentEnemyPosition[0] - this.x + 16
-            const deltaY = currentEnemyPosition[1] - this.y + 16
+            const deltaX = currentEnemyPosition[0] - (this.x + 16)
+            const deltaY = currentEnemyPosition[1] - (this.y + 16)
 
             const distance = (deltaX ** 2 + deltaY ** 2)**0.5   
 
             if (distance <= this.range) {
-                if(this.attackTime <= 0) {
-                    this.rotation = Math.atan2(deltaY, deltaX)
-                    console.log("Shot fired") // Test för att calculera senare projektilerna
-                    this.attackTime = this.attackSpeed
-                    return
+                const nextPoint = enemy.path[enemy.pathindex]
+
+                const furthestDistance = (enemy.pathindex * 1000) - (nextPoint.x**2 + nextPoint.y**2)**0.5
+
+                if (furthestEnemy < furthestDistance) {
+                    furthestEnemy = furthestDistance
+                    furthestEnemyIndex = i
                 }
             }
-        });
+        }
+        if (furthestEnemyIndex !== -1 && this.attackTime <= 0) {
+            const enemy = enemies[furthestEnemyIndex]
+
+            const currentEnemyPosition = enemy.currentPosition()
+            const deltaX = currentEnemyPosition[0] - (this.x + 16)
+            const deltaY = currentEnemyPosition[1] - (this.y + 16)
+  
+            this.rotation = Math.atan2(deltaY, deltaX) + (Math.PI / 2)
+            const enemyDead = enemy.damage(this.attackDamage, this.x, this.y)
+            if(enemyDead) {
+                enemies.splice(furthestEnemyIndex, 1)
+            }
+            this.attackTime = this.attackSpeed 
+        }
     }
 
     upgrade() {
@@ -253,6 +316,11 @@ class Tower {
         <button>PLACEHOLDER UPGRADE \n$200</button>
         `
         upgradeTab.classList.add("showUpgrade")
+        this.towerSlc = true
+    }
+
+    deselect() {
+        this.towerSlc = false
     }
 }
 
@@ -273,11 +341,13 @@ function animate(currentTime = performance.now()) {
     lastTime = currentTime
 
     if (deltaTime > 0.1) {
-        deltaTime = 0.1;
+        deltaTime = 0.1; // Om man tabbar ut blir tiden för lång, vilket kommer glitcha hela spelet
     }
 
     fps = Math.round(1 / deltaTime)
+
     Bctx.clearRect(0, 0, bookCanvas.width, bookCanvas.height)
+    Tctx.clearRect(0, 0, towerCanvas.width, towerCanvas.height)
     round.currentRound(Bctx, deltaTime)
     requestAnimationFrame(animate)
 }
@@ -290,6 +360,7 @@ function uiUpdate() {
     uictx.drawImage(heartSprite, 10, 20)
     uictx.fillText(currentHp, 40, 50)
     uictx.fillText(currentMoney, 160, 50)
+    console.log("Updated UI")
 }
 
 // Pathtracar som template för senare backgrundsbild som ska göras.
@@ -311,7 +382,6 @@ function mapPath(ctx, colour, width) {
 }
 
 function onMap(x, y) {
-    console.log(`(${x}, ${y})`)
     return ((x > 590 && x < 640 && y > 0 && y < 270) || (x > 60 && x < 640 && y > 220 && y < 270) || (x > 60 && x < 110 && y > 60 && y < 270) || (x > 60 && x < 270 && y > 60 && y < 110) || (x > 210 && x < 270 && y > 60 && y < 460) || (x > 210 && x < 780 && y > 410 && y < 460) || (x > 730 && x < 780 && y > 210 && y < 460) || (x > 730 && x < 918 && y > 210 && y < 260) || (x < 0) || (x > 888) || (y < 0) || (y > 510))
 }
 
@@ -344,10 +414,16 @@ window.addEventListener("mousedown", function (e) {
         }
     })
     if(clickedTower) {
+        placedTowers.forEach(tower => {
+            tower.deselect()
+        })
         clickedTower.upgrade()
     } else {
         if(!upgradeTab.contains(e.target)) {
             upgradeTab.classList.remove("showUpgrade")
+            placedTowers.forEach(tower => {
+                tower.deselect()
+            })
         }
     }
 })
@@ -386,7 +462,6 @@ window.addEventListener("mousemove", function(e) {
                 Tpctx.fillRect(x, y, 32, 32)
             }
             mapPath(Tpctx, "rgba(255, 0, 0, 0.4)", 20)
-            console.log(onMap(x, y))
         } else {
             Tpctx.clearRect(0, 0, towerPlaceCanvas.width, towerPlaceCanvas.height)
             insideCanvas = false
@@ -398,7 +473,6 @@ window.addEventListener("keydown", function (e) {
     const key = e.key
     if(key === " ") {
         pause = !pause
-        animate()
     }
 })
 
@@ -410,7 +484,8 @@ window.addEventListener("resize", function(e) {
 let round = new RoundManager()
 loadTowers()
 
-let spritesLeft = 4
+let spritesLeft = Object.keys(sprites).length
+console.log(spritesLeft)
 
 // Loading
 for (let sprite in sprites) {
