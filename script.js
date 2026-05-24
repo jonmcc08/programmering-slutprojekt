@@ -36,7 +36,7 @@ const towersList = document.querySelectorAll(".tower")
 let aspectRatio = window.innerHeight / 540
 let towerCurrentId = 0
 let mouseDown = false
-let currentMoney = 500
+let currentMoney = 0
 let currentHp = 100
 let pause = true
 let insideCanvas = false
@@ -118,6 +118,8 @@ class RoundManager {
         this.enemies = []
         this.activeRound = false
         this.allEnemiesSpawned = false
+        this.enemiesLoadingQueue = []
+        this.roundTime = 0
     }
 
     async loadRoundList() {
@@ -130,43 +132,45 @@ class RoundManager {
     loadRound() {
         const currentRound = this.rounds[this.currentRoundIndex];
         this.enemies = []; 
-        let roundEnemies = 0
-        let amountEnemies = 0
+        this.roundTime = 0
         this.activeRound = true
         currentMoney += currentRound.cashReward
         uiUpdate()
 
-        currentRound.roundEnemies.forEach(wave => roundEnemies += wave.amount)
-
         currentRound.roundEnemies.forEach((wave, index) => {
             console.log(index)
-            const waveDelay = index * 2000; 
+            const waveDelay = index * 2; 
             console.log(wave)
             for (let i = 0; i < wave.amount; i++) {
-                setTimeout(() => {
-                    const enemy = new Book(wave.health, wave.speed, wave.type)
-                    this.enemies.push(enemy)
-                    amountEnemies++
-                    console.log(enemy)
-                    if(amountEnemies == roundEnemies) {
-                        this.allEnemiesSpawned = true
-                    }
-                }, waveDelay + (i * wave.betweenDuration * 1000)) // MÅSTE GÖRA OM HELA DETTA TILL DELTA TID, ANNARS GÅR HELA SPELET SÖNDER
+                this.enemiesLoadingQueue.push({
+                    health: wave.health, 
+                    speed: wave.speed, 
+                    type: wave.type, 
+                    spawnDelay: waveDelay + (i * wave.betweenDuration)
+                })
             }
         })
     }
 
     currentRound(ctx, deltaTime) {
-        if(this.activeRound && this.allEnemiesSpawned && this.enemies.length == 0) {
-            this.currentRoundIndex++
-            this.allEnemiesSpawned = false
-            this.activeRound = false
-            setTimeout(() => this.loadRound(), 5000)
-            return
-        }
+
+        this.roundTime += deltaTime
+
         placedTowers.forEach(tower => {
-            tower.calcEnemyDistance(this.enemies)
+            tower.calcEnemyDistance(this.enemies, deltaTime)
         });
+        for(let i = this.enemiesLoadingQueue.length - 1; i >= 0; i--) {
+            const enemyDetails = this.enemiesLoadingQueue[i]
+            const enemySpawnDelay = enemyDetails.spawnDelay
+            if(enemySpawnDelay <= this.roundTime) {
+                const enemy = new Book(enemyDetails.health, enemyDetails.speed, enemyDetails.type)
+                this.enemiesLoadingQueue.splice(i, 1)
+                this.enemies.push(enemy)
+            }
+        }
+        if(this.enemiesLoadingQueue.length === 0) {
+            this.allEnemiesSpawned = true
+        }
         for (let i = this.enemies.length - 1; i >= 0; i--) {
             const enemy = this.enemies[i];
             enemy.movement(deltaTime);
@@ -181,15 +185,28 @@ class RoundManager {
             const tower = placedTowers[i]
             tower.draw(Tctx)
         }
+
+        if(this.activeRound && this.allEnemiesSpawned && this.enemies.length == 0) {
+            this.currentRoundIndex++
+            this.allEnemiesSpawned = false
+            this.activeRound = false
+            setTimeout(() => this.loadRound(), 5000)
+            return
+        }
     }
 }
 
 class Tower {
     constructor(towerType, towerId, x, y) {
         this.towerType = towerType
-        this.towerName = towers[(towerId - 1)].name
-        this.range = towers[(towerId - 1)].range
-        this.attackSpeed = towers[(towerId - 1)].attackSpeed
+
+        const configIndex = towerId - 1
+        
+        this.towerName = towers[configIndex].name
+        this.range = towers[configIndex].range
+        this.attackSpeed = towers[configIndex].attackSpeed
+        this.attackTime = 0
+        this.rotation = 0
         this.towerId = towerId
         this.image = sprites[("tower" + towerType)]
         this.tier = 0
@@ -199,19 +216,29 @@ class Tower {
     }
 
     draw(ctx) {
-        ctx.drawImage(this.image, this.x, this.y, 32, 32)
+        console.log(this.rotation)
+        ctx.save()
+        ctx.rotate(this.rotation)
+        ctx.drawImage(this.image, this.x, this.y, 32, 32, )
+        ctx.restore()
     }
 
-    calcEnemyDistance(enemies) {
+    calcEnemyDistance(enemies, deltaTime) {
+        this.attackTime -= deltaTime
         enemies.forEach(enemy => {
             const currentEnemyPosition = enemy.currentPosition()
             const deltaX = currentEnemyPosition[0] - this.x + 16
             const deltaY = currentEnemyPosition[1] - this.y + 16
 
-            const distance = (deltaX ** 2 + deltaY ** 2)**0.5
+            const distance = (deltaX ** 2 + deltaY ** 2)**0.5   
 
             if (distance <= this.range) {
-                console.log("Enemy in reach: " + enemy.type)
+                if(this.attackTime <= 0) {
+                    this.rotation = Math.atan2(deltaY, deltaX)
+                    console.log("Shot fired") // Test för att calculera senare projektilerna
+                    this.attackTime = this.attackSpeed
+                    return
+                }
             }
         });
     }
@@ -220,6 +247,10 @@ class Tower {
         console.log("Upgrade tab open: " + this.towerName)
         upgradeTab.querySelector(".image").innerHTML = `
         <img src="sprites/tower${this.towerType}.png" style="transform: rotate(180deg)">
+        `
+        upgradeTab.querySelector(".upgrade").innerHTML = `
+        <h3>${this.towerName}</h3>
+        <button>PLACEHOLDER UPGRADE \n$200</button>
         `
         upgradeTab.classList.add("showUpgrade")
     }
@@ -240,6 +271,10 @@ function animate(currentTime = performance.now()) {
     let deltaTime = (currentTime - lastTime) / 1000 // Tiden det tar för saken att "repeata" i sekunder
 
     lastTime = currentTime
+
+    if (deltaTime > 0.1) {
+        deltaTime = 0.1;
+    }
 
     fps = Math.round(1 / deltaTime)
     Bctx.clearRect(0, 0, bookCanvas.width, bookCanvas.height)
@@ -280,7 +315,12 @@ function onMap(x, y) {
     return ((x > 590 && x < 640 && y > 0 && y < 270) || (x > 60 && x < 640 && y > 220 && y < 270) || (x > 60 && x < 110 && y > 60 && y < 270) || (x > 60 && x < 270 && y > 60 && y < 110) || (x > 210 && x < 270 && y > 60 && y < 460) || (x > 210 && x < 780 && y > 410 && y < 460) || (x > 730 && x < 780 && y > 210 && y < 460) || (x > 730 && x < 918 && y > 210 && y < 260) || (x < 0) || (x > 888) || (y < 0) || (y > 510))
 }
 
-
+function fpsLogger() {
+    setTimeout(() => {
+        console.log("Current fps: " + fps)
+        fpsLogger()
+    }, 3000)
+}
 
 towersList.forEach(button => {
     button.addEventListener("mousedown", function(e) {
@@ -292,20 +332,24 @@ towersList.forEach(button => {
 })
 
 window.addEventListener("mousedown", function (e) {
+    const mouseX = e.x / aspectRatio
+    const mouseY = e.y / aspectRatio
+    let clickedTower = null
+
     placedTowers.forEach(tower => {
         const x = tower.x
         const y = tower.y
-
-        const mouseX = e.x / aspectRatio
-        const mouseY = e.y / aspectRatio
-
+        if(x <= mouseX && mouseX <= x + 32 && y <= mouseY && mouseY <= y + 32) {
+            clickedTower = tower
+        }
+    })
+    if(clickedTower) {
+        clickedTower.upgrade()
+    } else {
         if(!upgradeTab.contains(e.target)) {
             upgradeTab.classList.remove("showUpgrade")
         }
-        if(x <= mouseX && mouseX <= x + 32 && y <= mouseY && mouseY <= y + 32) {
-            tower.upgrade()
-        }
-    })
+    }
 })
 
 window.addEventListener("mouseup", function(e) {
@@ -314,6 +358,7 @@ window.addEventListener("mouseup", function(e) {
         currentMoney -= currentTowerCost
         uiUpdate()
         const tower = new Tower(towerCurrentId, towerIdIndex, (e.x / aspectRatio), (e.y / aspectRatio))
+        towerIdIndex++
         placedTowers.push(tower)
     }
     mouseDown = false
@@ -376,7 +421,7 @@ for (let sprite in sprites) {
             mapPath(Mctx, "black", 3)
             uiUpdate()
             round.loadRoundList()
-            fpsTracker()
+            fpsLogger()
         }
     }
 }

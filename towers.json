@@ -3,70 +3,70 @@
         {
             "id": 1,
             "name": "Johhny",
-            "attackSpeed": 1000,
+            "attackSpeed": 1,
             "cost": 200,
             "range": 100
         },
         {
             "id": 2,
             "name": "Johhny",
-            "attackSpeed": 1000,
+            "attackSpeed": 1,
             "cost": 200,
             "range": 30
         },
         {
             "id": 3,
             "name": "Johhny",
-            "attackSpeed": 1000,
+            "attackSpeed": 1,
             "cost": 200,
             "range": 30
         },
         {
             "id": 4,
             "name": "Johhny",
-            "attackSpeed": 1000,
+            "attackSpeed": 1,
             "cost": 200,
             "range": 30
         },
         {
             "id": 5,
             "name": "Johhny",
-            "attackSpeed": 1000,
+            "attackSpeed": 1,
             "cost": 200,
             "range": 30
         },
         {
             "id": 6,
             "name": "Johhny",
-            "attackSpeed": 1000,
+            "attackSpeed": 1,
             "cost": 200,
             "range": 30
         },
         {
             "id": 7,
             "name": "Johhny",
-            "attackSpeed": 1000,
+            "attackSpeed": 1,
             "cost": 200,
             "range": 30
         },
         {
             "id": 8,
             "name": "Johhny",
-            "attackSpeed": 1000,
+            "attackSpeed": 1,
             "cost": 200,
             "range": 30
         },
         {
             "id": 9,
             "name": "Johhny",
-            "attackSpeed": 1000,
+            "attackSpeed": 1,
             "cost": 200,
             "range": 30
         },
         {
             "id": 10,
             "name": "Howarts",
-            "attackSpeed": 50,
+            "attackSpeed": 0.05,
             "cost": 4000,
             "range": 400
         }
