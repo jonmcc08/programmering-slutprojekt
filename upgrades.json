@@ -4,7 +4,32 @@
             "id": 1,
             "upgradePath": [
                 {
-                    
+                    "name": "More attack speed",
+                    "upgrades": [
+                        {"attackSpeed": 0.67}
+                    ],
+                    "cost": 200
+                },
+                {
+                    "name": "More range",
+                    "upgrades": [
+                        {"range": 150}
+                    ],
+                    "cost": 600
+                },
+                {
+                    "name": "Mega super damage",
+                    "upgrades": [
+                        {"attackDamage": 2}
+                    ],
+                    "cost": 1000
+                },
+                {
+                    "name": "I show Twitch-speed",
+                    "upgrades": [
+                        {"attackSpeed": 0.45}
+                    ],
+                    "cost": 2000
                 }
             ]
         }

@@ -45,12 +45,13 @@ let currentMoney = 0
 let currentHp = 100
 let pause = false
 let insideCanvas = false
-let placedTowers = []
 let towerIdIndex = 1
 let towers = null
 let currentTowerCost = 0
 let lastTime = performance.now()
 let fps = 0
+const placedTowers = []
+const projectiles = []
 
 // SPRITES
 const sprites = {
@@ -60,7 +61,7 @@ const sprites = {
     book3: new Image(),
     tower1: new Image(),
     tower10: new Image(),
-    pencil: new Image()
+    projectile1: new Image()
 }
 
 sprites.heart.src = "sprites/heart.png"
@@ -69,18 +70,20 @@ sprites.book2.src = "sprites/book2.jpg"
 sprites.book3.src = "sprites/book3.jpg"
 sprites.tower1.src = "sprites/tower1.png"
 sprites.tower10.src = "sprites/tower10.png"
-sprites.pencil.src = "sprites/pencil.jpg"
+sprites.projectile1.src = "sprites/projectile1.jpg"
 
 // Testar movement
 class Book {
-    constructor(health, speed, type) {
+    constructor(type, enemyDetails) {
         this.path = [{x:630, y:0}, {x: 630, y:260}, {x:100, y:260}, {x:100, y:100}, {x:260, y:100}, {x:260, y:450}, {x:770, y:450}, {x:770, y:250}, {x:918, y:250}]
         this.x = this.path[0].x
         this.y = this.path[0].y
-        this.speed = speed
+        this.propertyIndex = type - 1
+        this.enemyDetails = enemyDetails
+        this.speed = this.enemyDetails[this.propertyIndex].speed
         this.pathindex = 0
         this.length = 20
-        this.health = health
+        this.health = this.enemyDetails[this.propertyIndex].health
         this.type = type
     }
 
@@ -119,13 +122,16 @@ class Book {
         uiUpdate()
         if(this.health <= 0) {
             this.type -= 1
+            this.propertyIndex -= 1
             if (this.type <= 0) {
-                this.health = 1
+                this.health = this.enemyDetails[this.propertyIndex].health
                 return true
             }
+            this.speed = this.enemyDetails[this.propertyIndex].speed
             if (this.health < 0) {
                 const damageOver = Math.abs(this.health)
-                this.health = 1
+                this.health = this.enemyDetails[this.propertyIndex].health
+                console.log(damageOver)
                 return this.damage(damageOver)
             }
         }
@@ -153,6 +159,7 @@ class RoundManager {
     async loadRoundList() {
         const retrieveData = await dataRetreiver("rounds.json")
         this.rounds = retrieveData.rounds
+        this.properties = retrieveData.enemyProperty
         this.loadRound()
         animate()
     }
@@ -192,7 +199,7 @@ class RoundManager {
                 const enemyDetails = this.enemiesLoadingQueue[i]
                 const enemySpawnDelay = enemyDetails.spawnDelay
                 if(enemySpawnDelay <= this.roundTime) {
-                    const enemy = new Book(enemyDetails.health, enemyDetails.speed, enemyDetails.type)
+                    const enemy = new Book(enemyDetails.type, this.properties)
                     this.enemiesLoadingQueue.splice(i, 1)
                     this.enemies.push(enemy)
                 }
@@ -232,12 +239,12 @@ class Tower {
     constructor(towerType, towerId, x, y) {
         this.towerType = towerType
 
-        const configIndex = towerType - 1
+        this.configIndex = towerType - 1
         
-        this.towerName = towers[configIndex].name
-        this.range = towers[configIndex].range
-        this.attackSpeed = towers[configIndex].attackSpeed
-        this.attackDamage = towers[configIndex].attackDamage
+        this.towerName = towers[this.configIndex].name
+        this.range = towers[this.configIndex].range
+        this.attackSpeed = towers[this.configIndex].attackSpeed
+        this.attackDamage = towers[this.configIndex].attackDamage
         this.attackTime = 0
         this.rotation = 0
         this.towerId = towerId
@@ -306,21 +313,63 @@ class Tower {
         }
     }
 
-    upgrade() {
+    upgradeTower(currentUpgrade) {
+        if (currentMoney >= currentUpgrade.cost) {
+            currentMoney -= currentUpgrade.cost
+            uiUpdate()
+            currentUpgrade.upgrades.forEach(statObj => {
+                const statKey = Object.keys(statObj)[0]
+                this[statKey] = statObj[statKey]
+                console.log(this[statKey])
+            })
+            this.tier++
+
+            this.upgrade()
+        } else {
+            return false
+        }
+    }
+
+    async upgrade() {
         console.log("Upgrade tab open: " + this.towerName)
+        const upgradeData = await dataRetreiver("upgrades.json")
+        const upgradePath = upgradeData.upgrades[this.configIndex].upgradePath
+        const currentUpgrade = upgradePath[this.tier]
         upgradeTab.querySelector(".image").innerHTML = `
         <img src="sprites/tower${this.towerType}.png" style="transform: rotate(180deg)">
         `
         upgradeTab.querySelector(".upgrade").innerHTML = `
         <h3>${this.towerName}</h3>
-        <button>PLACEHOLDER UPGRADE \n$200</button>
+        <button id="upgradeBtn">${currentUpgrade.name} | ${currentUpgrade.cost}</button>
         `
+
+        const upgradeBtn = document.getElementById("upgradeBtn")
+
+        upgradeBtn.onclick = () => {
+            const upgraded = this.upgradeTower(currentUpgrade)
+            if (!upgraded) {
+                upgradeTab.querySelector(".upgrade").innerHTML = `
+                <h3>${this.towerName}</h3>
+                <button id="upgradeBtn">Not enough money</button>
+                `
+                setTimeout(() => {
+                    this.upgrade()
+                }, 1000)
+            }
+        }
+
         upgradeTab.classList.add("showUpgrade")
         this.towerSlc = true
     }
 
     deselect() {
         this.towerSlc = false
+    }
+}
+
+class Projectile {
+    constructor() {
+        // ARBETA MED
     }
 }
 
