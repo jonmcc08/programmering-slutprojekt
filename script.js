@@ -59,7 +59,15 @@ const sprites = {
     book1: new Image(),
     book2: new Image(),
     book3: new Image(),
+    book4: new Image(),
+    book5: new Image(),
+    book6: new Image(),
+    book7: new Image(),
+    book8: new Image(),
+    book9: new Image(),
+    book10: new Image(),
     tower1: new Image(),
+    tower2: new Image(),
     tower10: new Image(),
     projectile1: new Image()
 }
@@ -68,7 +76,15 @@ sprites.heart.src = "sprites/heart.png"
 sprites.book1.src = "sprites/book1.jpg"
 sprites.book2.src = "sprites/book2.jpg"
 sprites.book3.src = "sprites/book3.jpg"
+sprites.book4.src = "sprites/book4.jpg"
+sprites.book5.src = "sprites/book5.jpg"
+sprites.book6.src = "sprites/book6.jpg"
+sprites.book7.src = "sprites/book7.jpg"
+sprites.book8.src = "sprites/book8.jpg"
+sprites.book9.src = "sprites/book9.jpg"
+sprites.book10.src = "sprites/book10.jpg"
 sprites.tower1.src = "sprites/tower1.png"
+sprites.tower2.src = "sprites/tower2.png"
 sprites.tower10.src = "sprites/tower10.png"
 sprites.projectile1.src = "sprites/projectile1.jpg"
 
@@ -116,15 +132,19 @@ class Book {
         return ([this.x, this.y])
     }
 
-    damage(attackDamage) {
-        this.health -= attackDamage
-        currentMoney += 10
-        uiUpdate()
+    damage(attackDamage, towerX, towerY, rotation) {
+        const projectile = new Projectile(towerX, towerY, this.x, this.y, attackDamage, rotation)
+        projectiles.push(projectile)
+    }
+
+    hit(damage) {
+        this.health -= damage
         if(this.health <= 0) {
             this.type -= 1
             this.propertyIndex -= 1
+            currentMoney += 10
+            uiUpdate()
             if (this.type <= 0) {
-                this.health = this.enemyDetails[this.propertyIndex].health
                 return true
             }
             this.speed = this.enemyDetails[this.propertyIndex].speed
@@ -132,7 +152,7 @@ class Book {
                 const damageOver = Math.abs(this.health)
                 this.health = this.enemyDetails[this.propertyIndex].health
                 console.log(damageOver)
-                return this.damage(damageOver)
+                return this.hit(damageOver)
             }
         }
     }
@@ -207,11 +227,31 @@ class RoundManager {
             if(this.enemiesLoadingQueue.length === 0) {
                 this.allEnemiesSpawned = true
             }
+            for (let i = projectiles.length - 1; i >= 0; i--) {
+                const projectile = projectiles[i]
+                projectile.movement(deltaTime)
+
+                if (projectile.deletion) {
+                    for (let j = this.enemies.length - 1; j >= 0; j--) {
+                        const enemy = this.enemies[j]
+                        const distance = ((enemy.x - projectile.x) ** 2 + (enemy.y - projectile.y) ** 2) ** 0.5
+
+                        if (distance < 24) {
+                            const enemyDead = enemy.hit(projectile.attackDamage)
+                            if (enemyDead) {
+                                this.enemies.splice(j, 1)
+                            }
+                            break
+                        }
+                    }
+                    projectiles.splice(i, 1)
+                }
+            }
             for (let i = this.enemies.length - 1; i >= 0; i--) {
                 const enemy = this.enemies[i];
                 enemy.movement(deltaTime);
                 if (enemy.pathindex >= enemy.path.length) {
-                    currentHp -= enemy.health
+                    currentHp -= enemy.tier
                     this.enemies.splice(i, 1);
                     uiUpdate()
                 }
@@ -223,6 +263,10 @@ class RoundManager {
         })
         placedTowers.forEach(tower => {
             tower.draw(Tctx)
+        })
+
+        projectiles.forEach(projectile => {
+            projectile.draw(Pctx)
         })
 
         if(this.activeRound && this.allEnemiesSpawned && this.enemies.length == 0) {
@@ -305,10 +349,7 @@ class Tower {
             const deltaY = currentEnemyPosition[1] - (this.y + 16)
   
             this.rotation = Math.atan2(deltaY, deltaX) + (Math.PI / 2)
-            const enemyDead = enemy.damage(this.attackDamage, this.x, this.y)
-            if(enemyDead) {
-                enemies.splice(furthestEnemyIndex, 1)
-            }
+            enemy.damage(this.attackDamage, this.x, this.y, this.rotation)
             this.attackTime = this.attackSpeed 
         }
     }
@@ -338,10 +379,19 @@ class Tower {
         upgradeTab.querySelector(".image").innerHTML = `
         <img src="sprites/tower${this.towerType}.png" style="transform: rotate(180deg)">
         `
-        upgradeTab.querySelector(".upgrade").innerHTML = `
-        <h3>${this.towerName}</h3>
-        <button id="upgradeBtn">${currentUpgrade.name} | ${currentUpgrade.cost}</button>
-        `
+        if(this.tier === 4) {
+            upgradeTab.querySelector(".upgrade").innerHTML = `
+            <h3>${this.towerName}</h3>
+            <button id="upgradeBtn" disabled>Maxed</button>
+            `
+        } else {
+            upgradeTab.querySelector(".upgrade").innerHTML = `
+            <h3>${this.towerName}</h3>
+            <button id="upgradeBtn">${currentUpgrade.name} | ${currentUpgrade.cost}</button>
+            `
+        }
+
+        upgradeTab.classList.add("showUpgrade")
 
         const upgradeBtn = document.getElementById("upgradeBtn")
 
@@ -358,7 +408,6 @@ class Tower {
             }
         }
 
-        upgradeTab.classList.add("showUpgrade")
         this.towerSlc = true
     }
 
@@ -368,10 +417,48 @@ class Tower {
 }
 
 class Projectile {
-    constructor() {
-        // ARBETA MED
+    constructor(towerX, towerY, enemyX, enemyY, attackDamage, rotation) {
+        this.x = towerX
+        this.y = towerY
+        this.eX = enemyX
+        this.eY = enemyY
+        this.rotation = rotation
+
+        const deltaX = this.eX - this.x
+        const deltaY = this.eY - this.y
+
+        this.attackDamage = attackDamage
+
+        this.speedX = deltaX / 0.1
+        this.speedY = deltaY / 0.1
+
+        this.deletion = false
+    }
+
+    movement(deltaTime) {
+        this.x += this.speedX * deltaTime
+        this.y += this.speedY * deltaTime
+
+        const remainingX = this.eX - this.x
+        const remainingY = this.eY - this.y
+        const distanceRemaining = (remainingX ** 2 + remainingY ** 2) ** 0.5
+
+        if (distanceRemaining < 5) {
+            this.x = this.eX
+            this.y = this.eY
+            this.deletion = true
+        }
+    }
+
+    draw(ctx) {
+        ctx.save()
+        ctx.translate(this.x + 3, this.y + 3)
+        ctx.rotate(this.rotation)
+        ctx.drawImage(sprites.projectile1, -3, -3, 2, 6)
+        ctx.restore()
     }
 }
+
 
 async function dataRetreiver(url) {
     const data = await fetch(url)
@@ -397,6 +484,7 @@ function animate(currentTime = performance.now()) {
 
     Bctx.clearRect(0, 0, bookCanvas.width, bookCanvas.height)
     Tctx.clearRect(0, 0, towerCanvas.width, towerCanvas.height)
+    Pctx.clearRect(0, 0, projectileCanvas.width, projectileCanvas.height)
     round.currentRound(Bctx, deltaTime)
     requestAnimationFrame(animate)
 }

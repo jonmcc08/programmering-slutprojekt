@@ -10,11 +10,11 @@
         },
         {
             "id": 2,
-            "name": "Johhny",
-            "attackSpeed": 1,
-            "attackDamage": 1,
-            "cost": 200,
-            "range": 30
+            "name": "Teduded",
+            "attackSpeed": 3,
+            "attackDamage": 2,
+            "cost": 400,
+            "range": 70
         },
         {
             "id": 3,
