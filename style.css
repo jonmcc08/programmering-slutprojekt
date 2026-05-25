@@ -40,6 +40,12 @@ body {
     height: 85vh;
 }
 
+#mapCanvas {
+    background-image: url(gameMap.png);
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
 #buttons {
     border-top: 6px solid rgb(67, 37, 0);
     width: 100%;

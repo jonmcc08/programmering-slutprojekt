@@ -91,7 +91,7 @@ sprites.projectile1.src = "sprites/projectile1.jpg"
 // Testar movement
 class Book {
     constructor(type, enemyDetails) {
-        this.path = [{x:630, y:0}, {x: 630, y:260}, {x:100, y:260}, {x:100, y:100}, {x:260, y:100}, {x:260, y:450}, {x:770, y:450}, {x:770, y:250}, {x:918, y:250}]
+        this.path = [{x:620.5, y:0}, {x: 620.5, y:230}, {x:90, y:230}, {x:90, y:70}, {x:250, y:70}, {x:250, y:420}, {x:760, y:420}, {x:760, y:220}, {x:918, y:220}]
         this.x = this.path[0].x
         this.y = this.path[0].y
         this.propertyIndex = type - 1
@@ -129,17 +129,18 @@ class Book {
     }
 
     currentPosition() {
-        return ([this.x, this.y])
+        return ([this.x + 10, this.y + 18])
     }
 
-    damage(attackDamage, towerX, towerY, rotation) {
-        const projectile = new Projectile(towerX, towerY, this.x, this.y, attackDamage, rotation)
+    damage(attackDamage, towerX, towerY) {
+        const projectile = new Projectile(towerX, towerY, this, attackDamage)
         projectiles.push(projectile)
     }
 
     hit(damage) {
         this.health -= damage
         if(this.health <= 0) {
+            const damageOver = Math.abs(this.health)
             this.type -= 1
             this.propertyIndex -= 1
             currentMoney += 10
@@ -148,10 +149,8 @@ class Book {
                 return true
             }
             this.speed = this.enemyDetails[this.propertyIndex].speed
-            if (this.health < 0) {
-                const damageOver = Math.abs(this.health)
-                this.health = this.enemyDetails[this.propertyIndex].health
-                console.log(damageOver)
+            this.health = this.enemyDetails[this.propertyIndex].health
+            if (damageOver > 0) {
                 return this.hit(damageOver)
             }
         }
@@ -234,9 +233,9 @@ class RoundManager {
                 if (projectile.deletion) {
                     for (let j = this.enemies.length - 1; j >= 0; j--) {
                         const enemy = this.enemies[j]
-                        const distance = ((enemy.x - projectile.x) ** 2 + (enemy.y - projectile.y) ** 2) ** 0.5
+                        const distance = ((enemy.x + 10 - projectile.x) ** 2 + (enemy.y + 18 - projectile.y) ** 2) ** 0.5
 
-                        if (distance < 24) {
+                        if (distance < 16) {
                             const enemyDead = enemy.hit(projectile.attackDamage)
                             if (enemyDead) {
                                 this.enemies.splice(j, 1)
@@ -251,7 +250,7 @@ class RoundManager {
                 const enemy = this.enemies[i];
                 enemy.movement(deltaTime);
                 if (enemy.pathindex >= enemy.path.length) {
-                    currentHp -= enemy.tier
+                    currentHp -= enemy.type
                     this.enemies.splice(i, 1);
                     uiUpdate()
                 }
@@ -349,7 +348,8 @@ class Tower {
             const deltaY = currentEnemyPosition[1] - (this.y + 16)
   
             this.rotation = Math.atan2(deltaY, deltaX) + (Math.PI / 2)
-            enemy.damage(this.attackDamage, this.x, this.y, this.rotation)
+            enemy.damage(this.attackDamage, this.x, this.y)
+            this.shots++
             this.attackTime = this.attackSpeed 
         }
     }
@@ -403,7 +403,10 @@ class Tower {
                 <button id="upgradeBtn">Not enough money</button>
                 `
                 setTimeout(() => {
-                    this.upgrade()
+                    upgradeTab.querySelector(".upgrade").innerHTML = `
+                    <h3>${this.towerName}</h3>
+                    <button id="upgradeBtn">${currentUpgrade.name} | ${currentUpgrade.cost}</button>
+                    `
                 }, 1000)
             }
         }
@@ -417,36 +420,49 @@ class Tower {
 }
 
 class Projectile {
-    constructor(towerX, towerY, enemyX, enemyY, attackDamage, rotation) {
+    constructor(towerX, towerY, enemy, attackDamage) {
         this.x = towerX
         this.y = towerY
-        this.eX = enemyX
-        this.eY = enemyY
-        this.rotation = rotation
-
-        const deltaX = this.eX - this.x
-        const deltaY = this.eY - this.y
-
         this.attackDamage = attackDamage
-
-        this.speedX = deltaX / 0.1
-        this.speedY = deltaY / 0.1
-
+        this.target = enemy
         this.deletion = false
     }
 
+    homing() {
+        this.eX = this.target.x + 10
+        this.eY = this.target.y + 18
+        const deltaX = this.eX - this.x
+        const deltaY = this.eY - this.y
+
+        this.rotation = Math.atan2(deltaY, deltaX) + (Math.PI / 2)
+
+        const distance = Math.max(1, (deltaX ** 2 + deltaY ** 2) ** 0.5)
+
+        this.speedX = (deltaX / distance) * 800
+        this.speedY = (deltaY / distance) * 800
+
+    }
+
     movement(deltaTime) {
-        this.x += this.speedX * deltaTime
-        this.y += this.speedY * deltaTime
+        if (this.target) { 
+            this.homing()
+        }
+
+        const moveX = this.speedX * deltaTime
+        const moveY = this.speedY * deltaTime
+        const moveDistance = (moveX ** 2 + moveY ** 2) ** 0.5
 
         const remainingX = this.eX - this.x
         const remainingY = this.eY - this.y
         const distanceRemaining = (remainingX ** 2 + remainingY ** 2) ** 0.5
 
-        if (distanceRemaining < 5) {
+        if (distanceRemaining <= moveDistance) {
             this.x = this.eX
             this.y = this.eY
             this.deletion = true
+        } else {
+            this.x += moveX
+            this.y += moveY
         }
     }
 
@@ -519,7 +535,7 @@ function mapPath(ctx, colour, width) {
 }
 
 function onMap(x, y) {
-    return ((x > 590 && x < 640 && y > 0 && y < 270) || (x > 60 && x < 640 && y > 220 && y < 270) || (x > 60 && x < 110 && y > 60 && y < 270) || (x > 60 && x < 270 && y > 60 && y < 110) || (x > 210 && x < 270 && y > 60 && y < 460) || (x > 210 && x < 780 && y > 410 && y < 460) || (x > 730 && x < 780 && y > 210 && y < 460) || (x > 730 && x < 918 && y > 210 && y < 260) || (x < 0) || (x > 888) || (y < 0) || (y > 510))
+    return ((x > 590 && x < 640 && y > 0 && y < 270) || (x > 60 && x < 640 && y > 220 && y < 270) || (x > 60 && x < 110 && y > 60 && y < 270) || (x > 60 && x < 270 && y > 60 && y < 110) || (x > 220 && x < 270 && y > 60 && y < 460) || (x > 210 && x < 780 && y > 410 && y < 460) || (x > 730 && x < 780 && y > 210 && y < 460) || (x > 730 && x < 918 && y > 210 && y < 260) || (x < 0) || (x > 888) || (y < 0) || (y > 510))
 }
 
 function fpsLogger() {
