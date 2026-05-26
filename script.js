@@ -69,6 +69,7 @@ let towers = null
 let currentTowerCost = 0
 let lastTime = performance.now()
 let fps = 0
+let gameActive = true
 const placedTowers = []
 const projectiles = []
 
@@ -91,8 +92,14 @@ const sprites = {
     tower4: new Image(),
     tower5: new Image(),
     tower6: new Image(),
-    tower10: new Image(),
-    projectile1: new Image()
+    tower7: new Image(),
+    tower8: new Image(),
+    projectile1: new Image(),
+    projectile2: new Image(),
+    projectile3: new Image(),
+    projectile4: new Image(),
+    glue: new Image(),
+    poison: new Image()
 }
 
 sprites.heart.src = "sprites/heart.png"
@@ -112,8 +119,14 @@ sprites.tower3.src = "sprites/tower3.png"
 sprites.tower4.src = "sprites/tower4.png"
 sprites.tower5.src = "sprites/tower5.png"
 sprites.tower6.src = "sprites/tower6.png"
-sprites.tower10.src = "sprites/tower10.png"
+sprites.tower7.src = "sprites/tower7.png"
+sprites.tower8.src = "sprites/tower8.png"
 sprites.projectile1.src = "sprites/projectile1.jpg"
+sprites.projectile2.src = "sprites/projectile2.jpg"
+sprites.projectile3.src = "sprites/projectile3.jpg"
+sprites.projectile4.src = "sprites/projectile4.jpg"
+sprites.glue.src = "sprites/glue.png"
+sprites.poison.src = "sprites/poison.png"
 
 class Book {
     constructor(type, enemyDetails) {
@@ -131,6 +144,10 @@ class Book {
         this.glued = false
         this.gluedTime = 0
         this.gluedEffect = 0
+        this.poison = false
+        this.poisonTime = 0
+        this.poisonDamage = 0
+        this.poisonDelay = 1
         this.type = type
     }
 
@@ -150,6 +167,19 @@ class Book {
             } else {
                 this.glued = false
                 this.gluedEffect = 0
+            }
+        } 
+        if(this.poison) {
+            
+            this.poisonTime -= deltaTime
+            this.poisonDelay -= deltaTime
+            if (this.poisonDelay <= 0) {
+                console.log("HIT!")
+                this.hit(this.poisonDamage)
+                this.poisonDelay += 1
+            }
+            if(this.poisionTime <= 0) {
+                this.poison = false
             }
         }
 
@@ -211,6 +241,15 @@ class Book {
         }
         const bookSprite = sprites["book" + this.type]
         ctx.drawImage(bookSprite, this.x, this.y)
+        if(this.frozen) {
+            ctx.fillStyle = "rgba(0, 132, 255, 0.33)"
+            ctx.fillRect(this.x, this.y, 20, 36)
+        } else if(this.glued) {
+            ctx.drawImage(sprites.glue, this.x, this.y)
+        }
+        if(this.poison) {
+            ctx.drawImage(sprites.poison, this.x, this.y)
+        }
     }
 }
 
@@ -255,12 +294,12 @@ class RoundManager {
         })
     }
 
-    currentRound(ctx, deltaTime) {
+    currentRound(deltaTime) {
         if(!pause) {
             
             this.roundTime += deltaTime
             placedTowers.forEach(tower => {
-            tower.calcEnemyDistance(this.enemies, deltaTime)
+                tower.calcEnemyDistance(this.enemies, deltaTime)
             })
 
             for(let i = this.enemiesLoadingQueue.length - 1; i >= 0; i--) {
@@ -275,7 +314,33 @@ class RoundManager {
             if(this.enemiesLoadingQueue.length === 0) {
                 this.allEnemiesSpawned = true
             }
-            for (let i = projectiles.length - 1; i >= 0; i--) {
+            for (let i = this.enemies.length - 1; i >= 0; i--) {
+                const enemy = this.enemies[i];
+                enemy.movement(deltaTime);
+
+                if(enemy.type <= 0) {
+                    this.enemies.splice(i, 1)
+                    continue
+                }
+                if (enemy.pathindex >= enemy.path.length) {
+                    currentHp -= enemy.type
+                    this.enemies.splice(i, 1);
+                    uiUpdate()
+                }
+            }
+        }
+
+        if(this.activeRound && this.allEnemiesSpawned && this.enemies.length == 0) {
+            this.currentRoundIndex++
+            this.allEnemiesSpawned = false
+            this.activeRound = false
+            setTimeout(() => this.loadRound(), 5000)
+            return
+        }
+    }
+
+    render(ctx, deltaTime) {
+        for (let i = projectiles.length - 1; i >= 0; i--) {
                 const projectile = projectiles[i]
                 projectile.movement(deltaTime)
 
@@ -285,7 +350,7 @@ class RoundManager {
                         const distance = ((enemy.x + 10 - projectile.x) ** 2 + (enemy.y + 18 - projectile.y) ** 2) ** 0.5
 
                         if (distance < 16) {
-                            const enemyDead = enemy.hit(projectile.attackDamage)
+                            const enemyDead = enemy.hit(projectile.attackDamage, j)
                             if (projectile.frozenTime > 0) {
                                 enemy.frozen = true
                                 enemy.frozenTime = projectile.frozenTime
@@ -293,6 +358,10 @@ class RoundManager {
                                 enemy.glued = true
                                 enemy.gluedTime = projectile.gluedTime
                                 enemy.gluedEffect = projectile.gluedEffect
+                            } else if (projectile.poisonTime > 0) {
+                                enemy.poison = true
+                                enemy.poisonTime = projectile.poisonTime
+                                enemy.poisonDamage = projectile.poisonDamage
                             }
                             if (enemyDead) {
                                 this.enemies.splice(j, 1)
@@ -303,17 +372,6 @@ class RoundManager {
                     projectiles.splice(i, 1)
                 }
             }
-            for (let i = this.enemies.length - 1; i >= 0; i--) {
-                const enemy = this.enemies[i];
-                enemy.movement(deltaTime);
-                if (enemy.pathindex >= enemy.path.length) {
-                    currentHp -= enemy.type
-                    this.enemies.splice(i, 1);
-                    uiUpdate()
-                }
-            }
-        }
-
         this.enemies.forEach(enemy => {
             enemy.draw(ctx);
         })
@@ -324,15 +382,8 @@ class RoundManager {
         projectiles.forEach(projectile => {
             projectile.draw(Pctx)
         })
-
-        if(this.activeRound && this.allEnemiesSpawned && this.enemies.length == 0) {
-            this.currentRoundIndex++
-            this.allEnemiesSpawned = false
-            this.activeRound = false
-            setTimeout(() => this.loadRound(), 5000)
-            return
-        }
     }
+
 }
 
 class Tower {
@@ -358,12 +409,17 @@ class Tower {
         this.frozenTime = 0
         this.gluedTime = 0
         this.gluedEffect = 0
+        this.poisonDamage = 0
+        this.poisonTime = 0
 
         if (this.configIndex === 3) {
             this.frozenTime = towers[3].frozenTime
         } else if (this.configIndex === 5) {
             this.gluedTime = towers[5].gluedTime
             this.gluedEffect = towers[5].gluedEffect
+        } else if (this.configIndex === 6) {
+            this.poisonDamage = towers[6].poisonDamage
+            this.poisonTime = towers[6].poisonTime
         }
     }
 
@@ -390,7 +446,18 @@ class Tower {
         let furthestEnemyIndex = -1
 
         for (let i = 0; i < enemies.length; i++) {
+
             const enemy = enemies[i]
+            
+            if (this.gluedTime > 0) {
+                if(enemy.glued) {continue}
+                if(enemy.frozen) {continue}
+            } else if(this.frozenTime > 0) {
+                if(enemy.frozen) {continue}
+            } else if(this.poisonTime > 0) {
+                if(enemy.poison) {continue}
+            }
+
             const currentEnemyPosition = enemy.currentPosition()
             const deltaX = currentEnemyPosition[0] - (this.x + 16)
             const deltaY = currentEnemyPosition[1] - (this.y + 16)
@@ -440,6 +507,11 @@ class Tower {
     }
 
     async upgrade() {
+
+        if(!this.towerSlc) {
+            return
+        }
+
         console.log("Upgrade tab open: " + this.towerName)
         const upgradeData = await dataRetreiver("upgrades.json")
         const upgradePath = upgradeData.upgrades[this.configIndex].upgradePath
@@ -455,7 +527,7 @@ class Tower {
         } else {
             upgradeTab.querySelector(".upgrade").innerHTML = `
             <h3>${this.towerName}</h3>
-            <button id="upgradeBtn">${currentUpgrade.name} | ${currentUpgrade.cost}</button>
+            <button id="upgradeBtn">${currentUpgrade.name} | $${currentUpgrade.cost}</button>
             `
         }
 
@@ -475,8 +547,6 @@ class Tower {
                 }, 1000)
             }
         }
-
-        this.towerSlc = true
     }
 
     deselect() {
@@ -494,6 +564,18 @@ class Projectile {
         this.frozenTime = tower.frozenTime
         this.gluedTime = tower.gluedTime
         this.gluedEffect = tower.gluedEffect
+        this.poisonDamage = tower.poisonDamage
+        this.poisonTime = tower.poisonTime
+
+        this.projectile = sprites.projectile1
+
+        if(this.frozenTime > 0) {
+            this.projectile = sprites.projectile2
+        } else if(this.gluedTime > 0) {
+            this.projectile = sprites.projectile3
+        } else if(this.poisionTime > 0) {
+            this.projectile = sprites.projectile4
+        }
     }
 
     homing() {
@@ -538,7 +620,7 @@ class Projectile {
         ctx.save()
         ctx.translate(this.x + 3, this.y + 3)
         ctx.rotate(this.rotation)
-        ctx.drawImage(sprites.projectile1, -3, -3, 2, 6)
+        ctx.drawImage(this.projectile, -3, -3, 2, 6)
         ctx.restore()
     }
 }
@@ -564,12 +646,22 @@ function animate(currentTime = performance.now()) {
         deltaTime = 0.1; // Om man tabbar ut blir tiden för lång, vilket kommer glitcha hela spelet
     }
 
-    fps = Math.round(1 / deltaTime)
+    if (currentHp <= 0) {
+        currentHp = 0
+        gameActive = false
+        uiUpdate()
+        throw new Error("You have died!") 
+    }
 
+    fps = Math.round(1 / deltaTime)
+    
+    Pctx.clearRect(0, 0, projectileCanvas.width, projectileCanvas.height)
     Bctx.clearRect(0, 0, bookCanvas.width, bookCanvas.height)
     Tctx.clearRect(0, 0, towerCanvas.width, towerCanvas.height)
-    Pctx.clearRect(0, 0, projectileCanvas.width, projectileCanvas.height)
-    round.currentRound(Bctx, deltaTime)
+    if (round.activeRound) {
+        round.currentRound(deltaTime)
+    }
+    round.render(Bctx, deltaTime)
     requestAnimationFrame(animate)
 }
 
@@ -584,6 +676,17 @@ function uiUpdate() {
     uictx.fillText("$" + currentMoney, 160, 50)
     uictx.font = "30px serif"
     uictx.fillText("Round " + (round.currentRoundIndex + 1) + "/30", 750, 30)
+
+    if(currentHp === 0) {
+        uictx.fillStyle = "rgba(0, 0, 0, 0.5)"
+        uictx.fillRect(0, 0, 918, 540)
+        uictx.font = "100px serif"
+        uictx.fillStyle = "red"
+        uictx.fillText("You have died!", 160, 250)
+        uictx.font = "40px serif"
+        uictx.fillText("Please refresh the page to restart", 200, 300)
+    }
+
     console.log("Updated UI")
 }
 
@@ -654,6 +757,7 @@ function fpsLogger() {
 
 towersList.forEach(button => {
     button.addEventListener("mousedown", function(e) {
+        if(!gameActive) {return}
         mouseDown = true
         towerCurrentId = button.id
         currentTowerCost = towers[(towerCurrentId - 1)].cost
@@ -662,6 +766,7 @@ towersList.forEach(button => {
 })
 
 window.addEventListener("mousedown", function (e) {
+    if(!gameActive) {return}
     const mouseX = e.x / aspectRatio
     const mouseY = e.y / aspectRatio
     let clickedTower = null
@@ -677,6 +782,7 @@ window.addEventListener("mousedown", function (e) {
         placedTowers.forEach(tower => {
             tower.deselect()
         })
+        clickedTower.towerSlc = true
         clickedTower.upgrade()
     } else {
         if(!upgradeTab.contains(e.target)) {
@@ -689,6 +795,7 @@ window.addEventListener("mousedown", function (e) {
 })
 
 window.addEventListener("mouseup", function(e) {
+    if(!gameActive) {return}
     Tpctx.clearRect(0, 0, towerPlaceCanvas.width, towerPlaceCanvas.height)
     if (insideCanvas && mouseDown && (currentTowerCost <= currentMoney) && !onMap((e.x / aspectRatio), (e.y / aspectRatio)) && !onTower((e.x / aspectRatio), (e.y / aspectRatio))) {
         currentMoney -= currentTowerCost
@@ -702,6 +809,7 @@ window.addEventListener("mouseup", function(e) {
 })
 
 window.addEventListener("mousemove", function(e) {
+    if(!gameActive) {return}
     const x = e.x / aspectRatio
     const y = e.y / aspectRatio
     if(mouseDown) {
@@ -717,7 +825,7 @@ window.addEventListener("mousemove", function(e) {
             Tpctx.fill()
             Tpctx.stroke()
             Tpctx.drawImage(towerImage, x, y, 32, 32)
-            if((currentTowerCost >= currentMoney) || onMap(x, y) || onTower(x, y)) {
+            if((currentTowerCost > currentMoney) || onMap(x, y) || onTower(x, y)) {
                 Tpctx.fillStyle = "rgba(255, 0, 0, 0.4)"
                 Tpctx.fillRect(x, y, 32, 32)
             }
@@ -731,6 +839,7 @@ window.addEventListener("mousemove", function(e) {
 })
 
 window.addEventListener("keydown", function (e) {
+    if(!gameActive) {return}
     const key = e.key
     if(key === " ") {
         pause = !pause
@@ -745,6 +854,7 @@ window.addEventListener("keydown", function (e) {
 })
 
 window.addEventListener("resize", function(e) {
+    if(!gameActive) {return}
     aspectRatio = window.innerHeight / 540
 })
 

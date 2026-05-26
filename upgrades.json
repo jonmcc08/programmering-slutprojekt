@@ -65,6 +65,223 @@
                     "cost": 3500
                 }
             ]
+        },
+        {
+            "id": 3,
+            "upgradePath": [
+                {
+                    "name": "Faster speed",
+                    "upgrades": [
+                        {"attackSpeed": 5}
+                    ],
+                    "cost": 500
+                },
+                {
+                    "name": "More damage",
+                    "upgrades": [
+                        {"attackDamage": 5}
+                    ],
+                    "cost": 1000
+                },
+                {
+                    "name": "Extra damage",
+                    "upgrades": [
+                        {"attackDamage": 8}
+                    ],
+                    "cost": 2000
+                },
+                {
+                    "name": "Even faster speed",
+                    "upgrades": [
+                        {"attackSpeed": 3}
+                    ],
+                    "cost": 3500
+                }
+            ]
+        },
+        {
+            "id": 4,
+            "upgradePath": [
+                {
+                    "name": "Longer Freeze",
+                    "upgrades": [
+                        {"frozenTime": 3}
+                    ],
+                    "cost": 600
+                },
+                {
+                    "name": "More Range and Damage",
+                    "upgrades": [
+                        {"range": 70}, 
+                        {"attackDamage": 2}
+                    ],
+                    "cost": 1500
+                },
+                {
+                    "name": "Faster reload",
+                    "upgrades": [
+                        {"attackSpeed": 4}
+                    ],
+                    "cost": 1500
+                },
+                {
+                    "name": "Unlimited Freeze!",
+                    "upgrades": [
+                        {"frozenTime": 5},
+                        {"attackDamage": 3},
+                        {"attackSpeed": 2}
+                    ],
+                    "cost": 3500
+                }
+            ]
+        },
+        {
+            "id": 5,
+            "upgradePath": [
+                {
+                    "name": "More attack speed",
+                    "upgrades": [
+                        {"attackSpeed": 0.05}
+                    ],
+                    "cost": 1000
+                },
+                {
+                    "name": "Extra attack speed & More damage",
+                    "upgrades": [
+                        {"attackSpeed": 0.025}, 
+                        {"attackDamage": 0.4}
+                    ],
+                    "cost": 2500
+                },
+                {
+                    "name": "Even faster reload",
+                    "upgrades": [
+                        {"attackSpeed": 0.0125}
+                    ],
+                    "cost": 4000
+                },
+                {
+                    "name": "Ultimate Speed!",
+                    "upgrades": [
+                        {"attackSpeed": 0.001}
+                    ],
+                    "cost": 10000
+                }
+            ]
+        },
+        {
+            "id": 6,
+            "upgradePath": [
+                {
+                    "name": "Longer Glue",
+                    "upgrades": [
+                        {"gluedTime": 4}
+                    ],
+                    "cost": 400
+                },
+                {
+                    "name": "Stronger glue & Range",
+                    "upgrades": [
+                        {"range": 150}, 
+                        {"gluedEffect": 0.7}
+                    ],
+                    "cost": 1500
+                },
+                {
+                    "name": "Faster reload",
+                    "upgrades": [
+                        {"attackSpeed": 2}
+                    ],
+                    "cost": 2000
+                },
+                {
+                    "name": "Hella gluestorm",
+                    "upgrades": [
+                        {"gluedTime": 5},
+                        {"gluedEffect": 0.9},
+                        {"attackDamage": 1},
+                        {"attackSpeed": 1}
+                    ],
+                    "cost": 5000
+                }
+            ]
+        },
+        {
+            "id": 7,
+            "upgradePath": [
+                {
+                    "name": "Longer poison",
+                    "upgrades": [
+                        {"poisonTime": 3}
+                    ],
+                    "cost": 1000
+                },
+                {
+                    "name": "More poison damage",
+                    "upgrades": [
+                        {"poisonDamage": 2}
+                    ],
+                    "cost": 1500
+                },
+                {
+                    "name": "Poison monstrosity",
+                    "upgrades": [
+                        {"poisonTime": 5},
+                        {"poisonDamage": 3}
+                    ],
+                    "cost": 5000
+                },
+                {
+                    "name": "Poison God",
+                    "upgrades": [
+                        {"poisonTime": 7},
+                        {"poisonDamage": 4},
+                        {"range": 150},
+                        {"attackSpeed": 0.7}
+                    ],
+                    "cost": 10000
+                }
+            ]
+        },
+        {
+            "id": 8,
+            "upgradePath": [
+                {
+                    "name": "Extra Range",
+                    "upgrades": [
+                        {"range": 300}
+                    ],
+                    "cost": 1000
+                },
+                {
+                    "name": "More Damage & Range",
+                    "upgrades": [
+                        {"attackDamage": 3},
+                        {"range": 400}
+                    ],
+                    "cost": 4000
+                },
+                {
+                    "name": "Beyond human",
+                    "upgrades": [
+                        {"range": 500},
+                        {"poisonTime": 2},
+                        {"poisonDamage": 1}
+                    ],
+                    "cost": 5000
+                },
+                {
+                    "name": "The God",
+                    "upgrades": [
+                        {"poisonTime": 5},
+                        {"poisonDamage": 3},
+                        {"gluedTime": 4},
+                        {"gluedEffect": 0.5},
+                        {"attackSpeed": 0.01}
+                    ],
+                    "cost": 30000
+                }
+            ]
         }
     ]
 }

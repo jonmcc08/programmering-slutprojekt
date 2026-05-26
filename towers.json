@@ -20,7 +20,7 @@
             "id": 3,
             "name": "Fabbe",
             "attackSpeed": 10,
-            "attackDamage": 1,
+            "attackDamage": 2,
             "cost": 200,
             "range": 1000
         },
@@ -36,10 +36,10 @@
         {
             "id": 5,
             "name": "Beast",
-            "attackSpeed": 0.3,
+            "attackSpeed": 0.1,
             "attackDamage": 0.2,
             "cost": 800,
-            "range": 50
+            "range": 150
         },
         {
             "id": 6,
@@ -47,41 +47,27 @@
             "attackSpeed": 4,
             "attackDamage": 0,
             "cost": 300,
-            "range": 50,
+            "range": 100,
             "gluedTime": 2,
             "gluedEffect": 0.5
         },
         {
             "id": 7,
-            "name": "Johhny",
+            "name": "Vigg",
             "attackSpeed": 1,
-            "attackDamage": 1,
-            "cost": 200,
-            "range": 30
+            "attackDamage": 0,
+            "cost": 1200,
+            "range": 100,
+            "poisonDamage": 1,
+            "poisonTime": 2
         },
         {
             "id": 8,
-            "name": "Johhny",
-            "attackSpeed": 1,
-            "attackDamage": 1,
-            "cost": 200,
-            "range": 30
-        },
-        {
-            "id": 9,
-            "name": "Johhny",
-            "attackSpeed": 1,
-            "attackDamage": 1,
-            "cost": 200,
-            "range": 30
-        },
-        {
-            "id": 10,
             "name": "Howarts",
             "attackSpeed": 0.05,
             "attackDamage": 1,
             "cost": 4000,
-            "range": 400
+            "range": 200
         }
     ]
 }
