@@ -32,6 +32,39 @@
                     "cost": 2000
                 }
             ]
+        },
+        {
+            "id": 2,
+            "upgradePath": [
+                {
+                    "name": "Ted Power",
+                    "upgrades": [
+                        {"attackDamage": 3}
+                    ],
+                    "cost": 200
+                },
+                {
+                    "name": "More range",
+                    "upgrades": [
+                        {"range": 100}
+                    ],
+                    "cost": 1000
+                },
+                {
+                    "name": "Super Ted Power",
+                    "upgrades": [
+                        {"attackDamage": 6}
+                    ],
+                    "cost": 1500
+                },
+                {
+                    "name": "Ted Ultimate Power",
+                    "upgrades": [
+                        {"attackSpeed": 1}
+                    ],
+                    "cost": 3500
+                }
+            ]
         }
     ]
 }

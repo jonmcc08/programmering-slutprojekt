@@ -2,7 +2,7 @@
     "towers": [
         {
             "id": 1,
-            "name": "Johhny",
+            "name": "Johnny",
             "attackSpeed": 1,
             "attackDamage": 1,
             "cost": 200,
@@ -18,35 +18,38 @@
         },
         {
             "id": 3,
-            "name": "Johhny",
-            "attackSpeed": 1,
+            "name": "Fabbe",
+            "attackSpeed": 10,
             "attackDamage": 1,
             "cost": 200,
-            "range": 30
+            "range": 1000
         },
         {
             "id": 4,
-            "name": "Johhny",
-            "attackSpeed": 1,
+            "name": "Fifika",
+            "attackSpeed": 5,
             "attackDamage": 1,
-            "cost": 200,
-            "range": 30
+            "cost": 500,
+            "range": 50,
+            "frozenTime": 2
         },
         {
             "id": 5,
-            "name": "Johhny",
-            "attackSpeed": 1,
-            "attackDamage": 1,
-            "cost": 200,
-            "range": 30
+            "name": "Beast",
+            "attackSpeed": 0.3,
+            "attackDamage": 0.2,
+            "cost": 800,
+            "range": 50
         },
         {
             "id": 6,
-            "name": "Johhny",
-            "attackSpeed": 1,
-            "attackDamage": 1,
-            "cost": 200,
-            "range": 30
+            "name": "Willhanson",
+            "attackSpeed": 4,
+            "attackDamage": 0,
+            "cost": 300,
+            "range": 50,
+            "gluedTime": 2,
+            "gluedEffect": 0.5
         },
         {
             "id": 7,

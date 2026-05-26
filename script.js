@@ -1,3 +1,22 @@
+/* 
+=====================================================
+=                VIKTIG INFORMATION!                =
+=                                                   =
+=                                                   =
+=     Eftersom att spelet använder sig av JSON-     =
+=      filer så kan man inte använda RAW-HTML       =
+=      för att loada in, därför har jag skapat      =
+=         en hemsida som har spelet på sig.         =
+=                                                   =
+=        Länk: https://tower-defense.page.gd/       =
+=                                                   =
+=         (Tar lite längre tid att uppdatera)       =
+=                                                   =
+=====================================================
+*/
+
+
+
 /** @type {HTMLCanvasElement} */
 const bookCanvas = document.getElementById("bookCanvas")
 /** @type {CanvasRenderingContext2D} */
@@ -68,6 +87,10 @@ const sprites = {
     book10: new Image(),
     tower1: new Image(),
     tower2: new Image(),
+    tower3: new Image(),
+    tower4: new Image(),
+    tower5: new Image(),
+    tower6: new Image(),
     tower10: new Image(),
     projectile1: new Image()
 }
@@ -85,10 +108,13 @@ sprites.book9.src = "sprites/book9.jpg"
 sprites.book10.src = "sprites/book10.jpg"
 sprites.tower1.src = "sprites/tower1.png"
 sprites.tower2.src = "sprites/tower2.png"
+sprites.tower3.src = "sprites/tower3.png"
+sprites.tower4.src = "sprites/tower4.png"
+sprites.tower5.src = "sprites/tower5.png"
+sprites.tower6.src = "sprites/tower6.png"
 sprites.tower10.src = "sprites/tower10.png"
 sprites.projectile1.src = "sprites/projectile1.jpg"
 
-// Testar movement
 class Book {
     constructor(type, enemyDetails) {
         this.path = [{x:620.5, y:0}, {x: 620.5, y:230}, {x:90, y:230}, {x:90, y:70}, {x:250, y:70}, {x:250, y:420}, {x:760, y:420}, {x:760, y:220}, {x:918, y:220}]
@@ -100,10 +126,32 @@ class Book {
         this.pathindex = 0
         this.length = 20
         this.health = this.enemyDetails[this.propertyIndex].health
+        this.frozen = false
+        this.frozenTime = 0
+        this.glued = false
+        this.gluedTime = 0
+        this.gluedEffect = 0
         this.type = type
     }
 
     movement(deltaTime) {
+
+        if(this.frozen) {
+            if (this.frozenTime >= 0) {
+                this.frozenTime -= deltaTime
+                return
+            } else {
+                this.frozen = false
+            }
+        } else if(this.glued) {
+            if (this.gluedTime >= 0) {
+                this.gluedTime -= deltaTime
+                this.speed -= this.gluedEffect
+            } else {
+                this.glued = false
+                this.gluedEffect = 0
+            }
+        }
 
         const nextPosition = this.path[this.pathindex]
 
@@ -126,14 +174,15 @@ class Book {
                 this.y -= movementLenght
             }
         }
+        this.speed += this.gluedEffect
     }
 
     currentPosition() {
         return ([this.x + 10, this.y + 18])
     }
 
-    damage(attackDamage, towerX, towerY) {
-        const projectile = new Projectile(towerX, towerY, this, attackDamage)
+    damage(attackDamage, tower) {
+        const projectile = new Projectile(tower, this, attackDamage)
         projectiles.push(projectile)
     }
 
@@ -237,6 +286,14 @@ class RoundManager {
 
                         if (distance < 16) {
                             const enemyDead = enemy.hit(projectile.attackDamage)
+                            if (projectile.frozenTime > 0) {
+                                enemy.frozen = true
+                                enemy.frozenTime = projectile.frozenTime
+                            } else if (projectile.gluedTime > 0) {
+                                enemy.glued = true
+                                enemy.gluedTime = projectile.gluedTime
+                                enemy.gluedEffect = projectile.gluedEffect
+                            }
                             if (enemyDead) {
                                 this.enemies.splice(j, 1)
                             }
@@ -297,6 +354,17 @@ class Tower {
         this.shots = 0
         this.x = x
         this.y = y
+
+        this.frozenTime = 0
+        this.gluedTime = 0
+        this.gluedEffect = 0
+
+        if (this.configIndex === 3) {
+            this.frozenTime = towers[3].frozenTime
+        } else if (this.configIndex === 5) {
+            this.gluedTime = towers[5].gluedTime
+            this.gluedEffect = towers[5].gluedEffect
+        }
     }
 
     draw(ctx) {
@@ -348,7 +416,7 @@ class Tower {
             const deltaY = currentEnemyPosition[1] - (this.y + 16)
   
             this.rotation = Math.atan2(deltaY, deltaX) + (Math.PI / 2)
-            enemy.damage(this.attackDamage, this.x, this.y)
+            enemy.damage(this.attackDamage, this)
             this.shots++
             this.attackTime = this.attackSpeed 
         }
@@ -403,10 +471,7 @@ class Tower {
                 <button id="upgradeBtn">Not enough money</button>
                 `
                 setTimeout(() => {
-                    upgradeTab.querySelector(".upgrade").innerHTML = `
-                    <h3>${this.towerName}</h3>
-                    <button id="upgradeBtn">${currentUpgrade.name} | ${currentUpgrade.cost}</button>
-                    `
+                    this.upgrade()
                 }, 1000)
             }
         }
@@ -420,12 +485,15 @@ class Tower {
 }
 
 class Projectile {
-    constructor(towerX, towerY, enemy, attackDamage) {
-        this.x = towerX
-        this.y = towerY
+    constructor(tower, enemy, attackDamage) {
+        this.x = tower.x
+        this.y = tower.y
         this.attackDamage = attackDamage
         this.target = enemy
         this.deletion = false
+        this.frozenTime = tower.frozenTime
+        this.gluedTime = tower.gluedTime
+        this.gluedEffect = tower.gluedEffect
     }
 
     homing() {
@@ -507,12 +575,15 @@ function animate(currentTime = performance.now()) {
 
 function uiUpdate() {
     const heartSprite = sprites["heart"]
+
     console.log("Updating UI")
     uictx.clearRect(0, 0, uiCanvas.width, uiCanvas.height)
     uictx.font = "48px serif"
     uictx.drawImage(heartSprite, 10, 20)
     uictx.fillText(currentHp, 40, 50)
-    uictx.fillText(currentMoney, 160, 50)
+    uictx.fillText("$" + currentMoney, 160, 50)
+    uictx.font = "30px serif"
+    uictx.fillText("Round " + (round.currentRoundIndex + 1) + "/30", 750, 30)
     console.log("Updated UI")
 }
 
@@ -535,7 +606,43 @@ function mapPath(ctx, colour, width) {
 }
 
 function onMap(x, y) {
-    return ((x > 590 && x < 640 && y > 0 && y < 270) || (x > 60 && x < 640 && y > 220 && y < 270) || (x > 60 && x < 110 && y > 60 && y < 270) || (x > 60 && x < 270 && y > 60 && y < 110) || (x > 220 && x < 270 && y > 60 && y < 460) || (x > 210 && x < 780 && y > 410 && y < 460) || (x > 730 && x < 780 && y > 210 && y < 460) || (x > 730 && x < 918 && y > 210 && y < 260) || (x < 0) || (x > 888) || (y < 0) || (y > 510))
+    return (
+        (x > 590 && x < 640 && y > 0 && y < 270) || 
+        (x > 60 && x < 640 && y > 220 && y < 270) || 
+        (x > 60 && x < 110 && y > 60 && y < 270) || 
+        (x > 60 && x < 270 && y > 60 && y < 110) || 
+        (x > 220 && x < 270 && y > 60 && y < 460) || 
+        (x > 210 && x < 780 && y > 410 && y < 460) || 
+        (x > 730 && x < 780 && y > 210 && y < 460) || 
+        (x > 730 && x < 918 && y > 210 && y < 260) || 
+        (x < 0) || (x > 888) || (y < 0) || (y > 510)
+)
+}
+
+function onTower(x, y) {
+    condition = false
+    placedTowers.forEach(tower => {
+        towerX = tower.x
+        towerY = tower.y
+
+        if (x >= (towerX - 40) && x <= (towerX + 40) && y >= (towerY - 40) && y <= (towerY + 40)) {
+            condition = true
+        }
+    })
+    return condition
+}
+
+function towerPlacement (ctx,) {
+
+    placedTowers.forEach(tower => {
+        towerX = tower.x
+        towerY = tower.y
+
+        ctx.beginPath()
+        ctx.arc((towerX + 16), (towerY + 16), 20, 0, 2 * Math.PI)
+        ctx.fillStyle = "rgba(255, 0, 0, 0.4)"
+        ctx.fill()
+    })
 }
 
 function fpsLogger() {
@@ -583,7 +690,7 @@ window.addEventListener("mousedown", function (e) {
 
 window.addEventListener("mouseup", function(e) {
     Tpctx.clearRect(0, 0, towerPlaceCanvas.width, towerPlaceCanvas.height)
-    if (insideCanvas && mouseDown && (currentTowerCost <= currentMoney) && !onMap((e.x / aspectRatio), (e.y / aspectRatio))) {
+    if (insideCanvas && mouseDown && (currentTowerCost <= currentMoney) && !onMap((e.x / aspectRatio), (e.y / aspectRatio)) && !onTower((e.x / aspectRatio), (e.y / aspectRatio))) {
         currentMoney -= currentTowerCost
         uiUpdate()
         const tower = new Tower(towerCurrentId, towerIdIndex, (e.x / aspectRatio), (e.y / aspectRatio))
@@ -610,11 +717,12 @@ window.addEventListener("mousemove", function(e) {
             Tpctx.fill()
             Tpctx.stroke()
             Tpctx.drawImage(towerImage, x, y, 32, 32)
-            if((currentTowerCost >= currentMoney) || onMap(x, y)) {
+            if((currentTowerCost >= currentMoney) || onMap(x, y) || onTower(x, y)) {
                 Tpctx.fillStyle = "rgba(255, 0, 0, 0.4)"
                 Tpctx.fillRect(x, y, 32, 32)
             }
             mapPath(Tpctx, "rgba(255, 0, 0, 0.4)", 20)
+            towerPlacement(Tpctx, x, y)
         } else {
             Tpctx.clearRect(0, 0, towerPlaceCanvas.width, towerPlaceCanvas.height)
             insideCanvas = false
@@ -627,12 +735,18 @@ window.addEventListener("keydown", function (e) {
     if(key === " ") {
         pause = !pause
     }
+
+    // DEV TOOL
+
+    if(key === "'") {
+        currentMoney += 10000
+        uiUpdate()
+    }
 })
 
 window.addEventListener("resize", function(e) {
     aspectRatio = window.innerHeight / 540
 })
-
 
 let round = new RoundManager()
 loadTowers()
