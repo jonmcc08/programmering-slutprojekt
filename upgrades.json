@@ -183,7 +183,7 @@
                     "name": "Stronger glue & Range",
                     "upgrades": [
                         {"range": 150}, 
-                        {"gluedEffect": 0.7}
+                        {"gluedEffect": 4}
                     ],
                     "cost": 1500
                 },
@@ -198,7 +198,7 @@
                     "name": "Hella gluestorm",
                     "upgrades": [
                         {"gluedTime": 5},
-                        {"gluedEffect": 0.9},
+                        {"gluedEffect": 6},
                         {"attackDamage": 1},
                         {"attackSpeed": 1}
                     ],
@@ -276,7 +276,7 @@
                         {"poisonTime": 5},
                         {"poisonDamage": 3},
                         {"gluedTime": 4},
-                        {"gluedEffect": 0.5},
+                        {"gluedEffect": 2},
                         {"attackSpeed": 0.01}
                     ],
                     "cost": 30000

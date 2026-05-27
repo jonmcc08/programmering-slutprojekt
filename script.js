@@ -86,6 +86,7 @@ const sprites = {
     book8: new Image(),
     book9: new Image(),
     book10: new Image(),
+    book11: new Image(),
     tower1: new Image(),
     tower2: new Image(),
     tower3: new Image(),
@@ -113,6 +114,7 @@ sprites.book7.src = "sprites/book7.jpg"
 sprites.book8.src = "sprites/book8.jpg"
 sprites.book9.src = "sprites/book9.jpg"
 sprites.book10.src = "sprites/book10.jpg"
+sprites.book11.src = "sprites/book11.png"
 sprites.tower1.src = "sprites/tower1.png"
 sprites.tower2.src = "sprites/tower2.png"
 sprites.tower3.src = "sprites/tower3.png"
@@ -129,13 +131,14 @@ sprites.glue.src = "sprites/glue.png"
 sprites.poison.src = "sprites/poison.png"
 
 class Book {
-    constructor(type, enemyDetails) {
+    constructor(type, enemyDetails, position) {
         this.path = [{x:620.5, y:0}, {x: 620.5, y:230}, {x:90, y:230}, {x:90, y:70}, {x:250, y:70}, {x:250, y:420}, {x:760, y:420}, {x:760, y:220}, {x:918, y:220}]
         this.x = this.path[0].x
         this.y = this.path[0].y
         this.propertyIndex = type - 1
         this.enemyDetails = enemyDetails
         this.speed = this.enemyDetails[this.propertyIndex].speed
+        this.originalSpeed = this.speed
         this.pathindex = 0
         this.length = 20
         this.health = this.enemyDetails[this.propertyIndex].health
@@ -149,6 +152,14 @@ class Book {
         this.poisonDamage = 0
         this.poisonDelay = 1
         this.type = type
+
+        console.log(position)
+
+        if(position !== undefined) {
+            this.x = position.x
+            this.y = position.y
+            this.pathindex = position.pathindex
+        }
     }
 
     movement(deltaTime) {
@@ -163,9 +174,10 @@ class Book {
         } else if(this.glued) {
             if (this.gluedTime >= 0) {
                 this.gluedTime -= deltaTime
-                this.speed -= this.gluedEffect
+                this.speed = this.originalSpeed / this.gluedEffect
             } else {
                 this.glued = false
+                this.speed = this.originalSpeed
                 this.gluedEffect = 0
             }
         } 
@@ -204,7 +216,6 @@ class Book {
                 this.y -= movementLenght
             }
         }
-        this.speed += this.gluedEffect
     }
 
     currentPosition() {
@@ -220,6 +231,9 @@ class Book {
         this.health -= damage
         if(this.health <= 0) {
             const damageOver = Math.abs(this.health)
+            if(this.type === 11) {
+                round.bossDefeated(this)
+            }
             this.type -= 1
             this.propertyIndex -= 1
             currentMoney += 10
@@ -236,11 +250,29 @@ class Book {
     }
 
     draw(ctx) {
+
         if(this.type <= 0) {
             return
         }
-        const bookSprite = sprites["book" + this.type]
-        ctx.drawImage(bookSprite, this.x, this.y)
+        if (this.type < 11) {
+            const bookSprite = sprites["book" + this.type]
+            ctx.drawImage(bookSprite, this.x, this.y)
+        } else {
+            const bookSprite = sprites["book11"]
+            let xCut = 0
+        
+            if (this.health > 7000) {
+                xCut = 0
+            } else if (this.health > 4000) {
+                xCut = 60
+            } else if (this.health > 2000) {
+                xCut = 60 * 2
+            } else {
+                xCut = 60 * 3
+            }
+
+            ctx.drawImage(bookSprite, xCut, 0, 40, 72, (this.x - 8), (this.y - 20), 40, 72)
+        }
         if(this.frozen) {
             ctx.fillStyle = "rgba(0, 132, 255, 0.33)"
             ctx.fillRect(this.x, this.y, 20, 36)
@@ -272,6 +304,13 @@ class RoundManager {
     }
 
     loadRound() {
+
+        if(this.currentRoundIndex == 30) {
+            uiUpdate(true)
+            gameActive = false
+            throw new Error("You have won!")
+        }
+
         const currentRound = this.rounds[this.currentRoundIndex];
         this.enemies = []; 
         this.roundTime = 0
@@ -295,6 +334,7 @@ class RoundManager {
     }
 
     currentRound(deltaTime) {
+
         if(!pause) {
             
             this.roundTime += deltaTime
@@ -336,6 +376,13 @@ class RoundManager {
             this.activeRound = false
             setTimeout(() => this.loadRound(), 5000)
             return
+        }
+    }
+
+    bossDefeated(position) {
+        for(let i = 0; i < 10; i++) {
+            const enemy = new Book(10, this.properties, position)
+            this.enemies.push(enemy)
         }
     }
 
@@ -448,14 +495,15 @@ class Tower {
         for (let i = 0; i < enemies.length; i++) {
 
             const enemy = enemies[i]
-            
-            if (this.gluedTime > 0) {
-                if(enemy.glued) {continue}
-                if(enemy.frozen) {continue}
-            } else if(this.frozenTime > 0) {
-                if(enemy.frozen) {continue}
-            } else if(this.poisonTime > 0) {
-                if(enemy.poison) {continue}
+            if(this.towerType != 8) {
+                if (this.gluedTime > 0) {
+                    if(enemy.glued) {continue}
+                    if(enemy.frozen) {continue}
+                } else if(this.frozenTime > 0) {
+                    if(enemy.frozen) {continue}
+                } else if(this.poisonTime > 0) {
+                    if(enemy.poison) {continue}
+                }
             }
 
             const currentEnemyPosition = enemy.currentPosition()
@@ -467,7 +515,7 @@ class Tower {
             if (distance <= this.range) {
                 const nextPoint = enemy.path[enemy.pathindex]
 
-                const furthestDistance = (enemy.pathindex * 1000) - (nextPoint.x**2 + nextPoint.y**2)**0.5
+                const furthestDistance = (enemy.pathindex * 10000) - (nextPoint.x**2 + nextPoint.y**2)**0.5
 
                 if (furthestEnemy < furthestDistance) {
                     furthestEnemy = furthestDistance
@@ -665,7 +713,7 @@ function animate(currentTime = performance.now()) {
     requestAnimationFrame(animate)
 }
 
-function uiUpdate() {
+function uiUpdate(won) {
     const heartSprite = sprites["heart"]
 
     console.log("Updating UI")
@@ -683,6 +731,14 @@ function uiUpdate() {
         uictx.font = "100px serif"
         uictx.fillStyle = "red"
         uictx.fillText("You have died!", 160, 250)
+        uictx.font = "40px serif"
+        uictx.fillText("Please refresh the page to restart", 200, 300)
+    } else if (won) {
+        uictx.fillStyle = "rgba(0, 0, 0, 0.5)"
+        uictx.fillRect(0, 0, 918, 540)
+        uictx.font = "100px serif"
+        uictx.fillStyle = "rgb(213, 241, 0)"
+        uictx.fillText("You have won!", 165, 250)
         uictx.font = "40px serif"
         uictx.fillText("Please refresh the page to restart", 200, 300)
     }
