@@ -11,63 +11,63 @@
         {
             "id": 2,
             "name": "Teduded",
-            "attackSpeed": 3,
-            "attackDamage": 2,
+            "attackSpeed": 2.4,
+            "attackDamage": 4,
             "cost": 400,
-            "range": 70
+            "range": 85
         },
         {
             "id": 3,
             "name": "Fabbe",
-            "attackSpeed": 10,
-            "attackDamage": 2,
-            "cost": 200,
+            "attackSpeed": 5,
+            "attackDamage": 7,
+            "cost": 300,
             "range": 1000
         },
         {
             "id": 4,
             "name": "Fifika",
-            "attackSpeed": 5,
+            "attackSpeed": 3.5,
             "attackDamage": 1,
             "cost": 500,
-            "range": 50,
-            "frozenTime": 2
+            "range": 75,
+            "frozenTime": 1.5
         },
         {
             "id": 5,
             "name": "Beast",
-            "attackSpeed": 0.1,
-            "attackDamage": 0.2,
+            "attackSpeed": 0.16,
+            "attackDamage": 1,
             "cost": 800,
-            "range": 150
+            "range": 125
         },
         {
             "id": 6,
-            "name": "Willhanson",
-            "attackSpeed": 4,
+            "name": "Wilhanson",
+            "attackSpeed": 2.5,
             "attackDamage": 0,
-            "cost": 300,
+            "cost": 350,
             "range": 100,
-            "gluedTime": 2,
-            "gluedEffect": 2
+            "gluedTime": 2.5,
+            "gluedEffect": 1.5
         },
         {
             "id": 7,
-            "name": "Vigg",
-            "attackSpeed": 1,
+            "name": "Vigor",
+            "attackSpeed": 1.2,
             "attackDamage": 0,
             "cost": 1200,
-            "range": 100,
-            "poisonDamage": 1,
-            "poisonTime": 2
+            "range": 110,
+            "poisonDamage": 2,
+            "poisonTime": 3
         },
         {
             "id": 8,
             "name": "Howarts",
-            "attackSpeed": 0.05,
-            "attackDamage": 1,
+            "attackSpeed": 0.4,
+            "attackDamage": 15,
             "cost": 4000,
-            "range": 200
+            "range": 220
         }
     ]
 }

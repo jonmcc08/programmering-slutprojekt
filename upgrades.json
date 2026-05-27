@@ -6,28 +6,28 @@
                 {
                     "name": "More attack speed",
                     "upgrades": [
-                        {"attackSpeed": 0.67}
+                        {"attackSpeed": 0.6} 
                     ],
                     "cost": 200
                 },
                 {
                     "name": "More range",
                     "upgrades": [
-                        {"range": 150}
+                        {"range": 150} 
                     ],
                     "cost": 600
                 },
                 {
                     "name": "Mega super damage",
                     "upgrades": [
-                        {"attackDamage": 2}
+                        {"attackDamage": 4}
                     ],
                     "cost": 1000
                 },
                 {
                     "name": "I show Twitch-speed",
                     "upgrades": [
-                        {"attackSpeed": 0.45}
+                        {"attackSpeed": 0.22}
                     ],
                     "cost": 2000
                 }
@@ -39,28 +39,28 @@
                 {
                     "name": "Ted Power",
                     "upgrades": [
-                        {"attackDamage": 3}
+                        {"attackDamage": 9}
                     ],
                     "cost": 200
                 },
                 {
                     "name": "More range",
                     "upgrades": [
-                        {"range": 100}
+                        {"range": 130}
                     ],
                     "cost": 1000
                 },
                 {
                     "name": "Super Ted Power",
                     "upgrades": [
-                        {"attackDamage": 6}
+                        {"attackDamage": 26}
                     ],
                     "cost": 1500
                 },
                 {
                     "name": "Ted Ultimate Power",
                     "upgrades": [
-                        {"attackSpeed": 1}
+                        {"attackSpeed": 1.1}
                     ],
                     "cost": 3500
                 }
@@ -72,28 +72,28 @@
                 {
                     "name": "Faster speed",
                     "upgrades": [
-                        {"attackSpeed": 5}
+                        {"attackSpeed": 3.0}
                     ],
                     "cost": 500
                 },
                 {
                     "name": "More damage",
                     "upgrades": [
-                        {"attackDamage": 5}
+                        {"attackDamage": 11}
                     ],
                     "cost": 1000
                 },
                 {
                     "name": "Extra damage",
                     "upgrades": [
-                        {"attackDamage": 8}
+                        {"attackDamage": 40}
                     ],
                     "cost": 2000
                 },
                 {
                     "name": "Even faster speed",
                     "upgrades": [
-                        {"attackSpeed": 3}
+                        {"attackSpeed": 1.4}
                     ],
                     "cost": 3500
                 }
@@ -112,15 +112,15 @@
                 {
                     "name": "More Range and Damage",
                     "upgrades": [
-                        {"range": 70}, 
-                        {"attackDamage": 2}
+                        {"range": 110 },
+                        {"attackDamage": 4}
                     ],
                     "cost": 1500
                 },
                 {
                     "name": "Faster reload",
                     "upgrades": [
-                        {"attackSpeed": 4}
+                        {"attackSpeed": 2}
                     ],
                     "cost": 1500
                 },
@@ -128,8 +128,8 @@
                     "name": "Unlimited Freeze!",
                     "upgrades": [
                         {"frozenTime": 5},
-                        {"attackDamage": 3},
-                        {"attackSpeed": 2}
+                        {"attackDamage": 12}, 
+                        {"attackSpeed": 1}
                     ],
                     "cost": 3500
                 }
@@ -141,29 +141,28 @@
                 {
                     "name": "More attack speed",
                     "upgrades": [
-                        {"attackSpeed": 0.05}
+                        {"attackSpeed": 0.09}
                     ],
                     "cost": 1000
                 },
                 {
                     "name": "Extra attack speed & More damage",
                     "upgrades": [
-                        {"attackSpeed": 0.025}, 
-                        {"attackDamage": 0.4}
+                        {"attackSpeed": 0.05}, {"attackDamage": 2}
                     ],
                     "cost": 2500
                 },
                 {
                     "name": "Even faster reload",
                     "upgrades": [
-                        {"attackSpeed": 0.0125}
+                        {"attackSpeed": 0.02}
                     ],
                     "cost": 4000
                 },
                 {
                     "name": "Ultimate Speed!",
                     "upgrades": [
-                        {"attackSpeed": 0.001}
+                        {"attackSpeed": 0.005}
                     ],
                     "cost": 10000
                 }
@@ -175,14 +174,14 @@
                 {
                     "name": "Longer Glue",
                     "upgrades": [
-                        {"gluedTime": 4}
+                        {"gluedTime": 4.5}
                     ],
                     "cost": 400
                 },
                 {
                     "name": "Stronger glue & Range",
                     "upgrades": [
-                        {"range": 150}, 
+                        {"range": 160},
                         {"gluedEffect": 4}
                     ],
                     "cost": 1500
@@ -190,17 +189,17 @@
                 {
                     "name": "Faster reload",
                     "upgrades": [
-                        {"attackSpeed": 2}
+                        {"attackSpeed": 1.4}
                     ],
                     "cost": 2000
                 },
                 {
                     "name": "Hella gluestorm",
                     "upgrades": [
-                        {"gluedTime": 5},
-                        {"gluedEffect": 6},
-                        {"attackDamage": 1},
-                        {"attackSpeed": 1}
+                        {"gluedTime": 6},
+                        {"gluedEffect": 5.5},
+                        {"attackDamage": 3},
+                        {"attackSpeed": 0.7}
                     ],
                     "cost": 5000
                 }
@@ -212,32 +211,32 @@
                 {
                     "name": "Longer poison",
                     "upgrades": [
-                        {"poisonTime": 3}
+                        {"poisonTime": 5}
                     ],
                     "cost": 1000
                 },
                 {
                     "name": "More poison damage",
                     "upgrades": [
-                        {"poisonDamage": 2}
+                        {"poisonDamage": 6}
                     ],
                     "cost": 1500
                 },
                 {
                     "name": "Poison monstrosity",
                     "upgrades": [
-                        {"poisonTime": 5},
-                        {"poisonDamage": 3}
+                        {"poisonTime": 7},
+                        {"poisonDamage": 22}
                     ],
                     "cost": 5000
                 },
                 {
                     "name": "Poison God",
                     "upgrades": [
-                        {"poisonTime": 7},
-                        {"poisonDamage": 4},
-                        {"range": 150},
-                        {"attackSpeed": 0.7}
+                        {"poisonTime": 10},
+                        {"poisonDamage": 55},
+                        {"range": 180},
+                        {"attackSpeed": 0.5}
                     ],
                     "cost": 10000
                 }
@@ -249,35 +248,35 @@
                 {
                     "name": "Extra Range",
                     "upgrades": [
-                        {"range": 300}
+                        {"range": 350}
                     ],
                     "cost": 1000
                 },
                 {
                     "name": "More Damage & Range",
                     "upgrades": [
-                        {"attackDamage": 3},
-                        {"range": 400}
+                        {"attackDamage": 55},
+                        {"range": 450}
                     ],
                     "cost": 4000
                 },
                 {
                     "name": "Beyond human",
                     "upgrades": [
-                        {"range": 500},
-                        {"poisonTime": 2},
-                        {"poisonDamage": 1}
+                        {"range": 550},
+                        {"poisonTime": 4},
+                        {"poisonDamage": 15}
                     ],
                     "cost": 5000
                 },
                 {
                     "name": "The God",
                     "upgrades": [
-                        {"poisonTime": 5},
-                        {"poisonDamage": 3},
-                        {"gluedTime": 4},
-                        {"gluedEffect": 2},
-                        {"attackSpeed": 0.01}
+                        {"poisonTime": 6},
+                        {"poisonDamage": 50},
+                        {"gluedTime": 5},
+                        {"gluedEffect": 3},
+                        {"attackSpeed": 0.02}
                     ],
                     "cost": 30000
                 }
