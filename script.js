@@ -163,8 +163,6 @@ class Book {
 
         // De mesta av variablarna förklarar sig själva i namnet.
 
-        console.log(position)
-
         if(position !== undefined) { // Detta används av bossen och spawnar flera vid positionen som bossen "dog" på
             this.x = position.x
             this.y = position.y
@@ -212,10 +210,14 @@ class Book {
         const disX = nextPosition.x - this.x // Distansen mellan
         const disY = nextPosition.y - this.y // Distansen mellan
 
+        const distance = (disX ** 2 + disY ** 2) ** 0.5 // Kollar distansen till nästa punkt
+
         const movementLenght = 60 * this.speed * deltaTime // Använder delta tid för att få hastigheten som ska köras i för att det ska fungera för alla HZ, om det är 60 så är delta tiden 1/60, alltså per frame som sedan tas ut av requestFrameAnimation som går på HZ;en.
 
-        if (Math.abs(disX) < this.speed && Math.abs(disY) < this.speed) {
-            this.pathindex++ // Om absolutbeloppet av distansen är högre än hastigheten byter den pathindex till nästa.
+        if (distance < 60 * this.speed * deltaTime) {
+            this.x = this.path[this.pathindex].x
+            this.y = this.path[this.pathindex].y
+            this.pathindex++ // Om distansen är mindre än vad längden rör sig så sätts den på nästa path index och lockar sig på nästa x och y värde
         } else {
             if (disX > 0) {
                 this.x += movementLenght
@@ -566,7 +568,6 @@ class Tower {
             currentUpgrade.upgrades.forEach(statObj => { // Kollar för varje upgrade inom upgrades.json och sätter då nya värdet
                 const statKey = Object.keys(statObj)[0] // Hämtar namnet av objektet och senare sätter nuvarande staten till den nya under.
                 this[statKey] = statObj[statKey]
-                console.log(this[statKey])
             })
             this.tier++
 
@@ -783,7 +784,6 @@ function uiUpdate(won) {
     // Ui för HP, pengar, förlust/vinst
     const heartSprite = sprites["heart"]
 
-    console.log("Updating UI")
     uictx.clearRect(0, 0, uiCanvas.width, uiCanvas.height)
     uictx.font = "48px serif"
     uictx.drawImage(heartSprite, 10, 20)
@@ -809,8 +809,6 @@ function uiUpdate(won) {
         uictx.font = "40px serif"
         uictx.fillText("Please refresh the page to restart", 200, 300)
     }
-
-    console.log("Updated UI")
 }
 
 // Pathtracar för att visa vart man inte kan lägga tornet.
@@ -1019,6 +1017,7 @@ for (let sprite in sprites) {
         console.log("Sprite loaded: " + sprite)
         spritesLeft--
         if (spritesLeft === 0) { // När alla loadas startas spelet.
+            console.log("Successfully loaded all sprites!")
             uiUpdate()
             round.loadRoundList()
             fpsLogger()
