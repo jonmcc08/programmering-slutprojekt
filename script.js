@@ -173,7 +173,7 @@ class Book {
     movement(deltaTime) {
 
         if(this.frozen) { // Kollar om boken är fryst, då använder den tiden och är stilla
-            if(this.type = 11) { // Gör så att bossen inte kan bli fryst
+            if(this.type == 11) { // Gör så att bossen inte kan bli fryst
                 this.frozen = false
             }
             if (this.frozenTime >= 0) {
