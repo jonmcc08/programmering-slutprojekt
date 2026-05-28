@@ -892,6 +892,17 @@ function aspectRatioUpdater() { // Får fram aspectration då spelet måste vara
     widthY = rect.top
 }
 
+function paused() {
+    if(pause) {
+        pauseBtn.innerHTML = `<img src="svg/pause-solid-full.svg" class="svg">`
+        pauseBtn.title = "Resume Game"
+    } else {
+        pauseBtn.innerHTML = `<img src="svg/play-solid-full.svg" class="svg">`
+        pauseBtn.title = "Pause Game"
+    } // Ändrar SVG'n beroende på om man har den pausad eller inte
+    pause = !pause
+}
+
 towersList.forEach(button => {
     button.addEventListener("mousedown", function(e) { // Om man klickar på ett av tornen på sidebaren så hämtar den information från den.
         if(!gameActive) {return} 
@@ -981,7 +992,7 @@ window.addEventListener("keydown", function (e) {
     if(!gameActive) {return}
     const key = e.key
     if(key === " ") {
-        pause = !pause // Pausar och resumar om man trycker spacebar
+        paused()
     }
 })
 
@@ -991,16 +1002,7 @@ window.addEventListener("resize", function(e) {
 })
 
 
-pauseBtn.addEventListener("click", function(e) {
-    if(pause) {
-        pauseBtn.innerHTML = `<img src="svg/pause-solid-full.svg" class="svg">`
-        pauseBtn.title = "Resume Game"
-    } else {
-        pauseBtn.innerHTML = `<img src="svg/play-solid-full.svg" class="svg">`
-        pauseBtn.title = "Pause Game"
-    } // Ändrar SVG'n beroende på om man har den pausad eller inte
-    pause = !pause
-})
+pauseBtn.addEventListener("click", paused)
 
 changeLog.addEventListener("click", function(e) {
     window.open("changelog.html", "_blank") // Öppnar en ny flik med changelogen om man trycker på den
