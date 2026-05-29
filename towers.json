@@ -21,7 +21,7 @@
             "name": "Fabbe",
             "attackSpeed": 5,
             "attackDamage": 7,
-            "cost": 300,
+            "cost": 200,
             "range": 1000
         },
         {
@@ -46,7 +46,7 @@
             "name": "Wilhanson",
             "attackSpeed": 2.5,
             "attackDamage": 0,
-            "cost": 350,
+            "cost": 300,
             "range": 100,
             "gluedTime": 2.5,
             "gluedEffect": 1.5
